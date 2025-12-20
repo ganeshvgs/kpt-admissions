@@ -1,13 +1,13 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 
-// https://vite.dev/config/
 export default defineConfig({
   plugins: [react()],
-
   preview: {
     host: true,
     port: 10000,
-    allowedHosts: ["s-society-1.onrender.com"],
+    allowedHosts: [
+      "kpt-admissions-1.onrender.com"
+    ],
   },
 });
