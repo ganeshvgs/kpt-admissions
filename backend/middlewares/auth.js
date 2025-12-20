@@ -1,55 +1,72 @@
-import { requireAuth, clerkClient } from "@clerk/express";
+// backend/middlewares/auth.js
+import { getAuth } from "@clerk/express";
+import User from "../models/User.js";
 
-export const requireAuthWithRole = (allowedRoles = []) => {
-  return [
-    requireAuth(), // ensures user is logged in
-    async (req, res, next) => {
-      try {
-        // Get session info safely
-        const session =
-          req.auth && typeof req.auth === "function" ? req.auth() : null;
-        const userId = session?.userId;
+/**
+ * ===============================
+ * REQUIRE AUTH (LOGIN REQUIRED)
+ * ===============================
+ * ✔ Verifies Clerk session
+ * ✔ Attaches clerkUserId to request
+ */
+export const requireAuth = (req, res, next) => {
+  try {
+    const auth = getAuth(req);
 
-        if (!userId) {
-          console.warn("No userId found in session:", session);
-          return res
-            .status(401)
-            .json({ error: "Unauthorized. No userId found." });
-        }
+    if (!auth || !auth.userId) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
 
-        // Fetch full user info from Clerk
-        let user;
-        try {
-          user = await clerkClient.users.getUser(userId);
-        } catch (fetchErr) {
-          console.error("Failed to fetch user from Clerk:", fetchErr);
-          return res
-            .status(500)
-            .json({ error: "Failed to fetch user info from Clerk" });
-        }
+    req.clerkUserId = auth.userId;
+    next();
+  } catch (err) {
+    console.error("❌ Auth error:", err);
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+};
 
-        const role = user?.publicMetadata?.role || null;
+/**
+ * ===============================
+ * REQUIRE ROLE (ROLE BASED ACCESS)
+ * ===============================
+ * ✔ Reads role from MongoDB (SOURCE OF TRUTH)
+ * ✔ Blocks unauthorized roles
+ *
+ * Usage:
+ * router.get("/admin", requireAuth, requireRole(["admin"]), handler)
+ */
+export const requireRole = (allowedRoles = []) => {
+  return async (req, res, next) => {
+    try {
+      const clerkUserId = req.clerkUserId;
 
-        // Check role
-        if (allowedRoles.length && !allowedRoles.includes(role)) {
-          console.warn("User role not allowed:", role);
-          return res
-            .status(403)
-            .json({ error: "Forbidden: Role not allowed", roleReceived: role });
-        }
-
-        // Attach user to request
-        req.user = {
-          id: user.id,
-          email: user.emailAddresses?.[0]?.emailAddress || null,
-          role,
-        };
-
-        next();
-      } catch (err) {
-        console.error("Auth Middleware Error:", err);
-        return res.status(401).json({ error: "Unauthorized request" });
+      if (!clerkUserId) {
+        return res.status(401).json({ error: "Unauthorized" });
       }
-    },
-  ];
+
+      const user = await User.findOne({ clerkUserId });
+
+      if (!user) {
+        return res.status(403).json({
+          error: "User record not found",
+        });
+      }
+
+      if (!allowedRoles.includes(user.role)) {
+        return res.status(403).json({
+          error: "Forbidden",
+          role: user.role,
+        });
+      }
+
+      // Attach role info (optional but useful)
+      req.userRole = user.role;
+      req.user = user;
+
+      next();
+    } catch (err) {
+      console.error("❌ Role check error:", err);
+      return res.status(403).json({ error: "Forbidden" });
+    }
+  };
 };

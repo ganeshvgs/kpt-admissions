@@ -1,3 +1,4 @@
+//backend/config/cloudinary.js
 import dotenv from "dotenv";
 dotenv.config(); // load env variables
 import { v2 as cloudinary } from "cloudinary";

@@ -8,86 +8,89 @@ export default function Landing() {
         {/* LEFT CONTENT */}
         <div className="text-center md:text-left">
           <p className="text-xs sm:text-sm uppercase tracking-wider text-indigo-600 font-semibold">
-            Registered Credit Co-operative Society
+            Autonomous Polytechnic Institution
           </p>
 
           <h1 className="mt-4 text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight">
-            Shri Brahmalingeshwara <br />
-            Credit Co-operative Society (N)
+            Karnataka Polytechnic <br />
+            Mangalore (KPT)
           </h1>
 
           <p className="mt-5 text-base sm:text-lg text-gray-600">
-            A trusted co-operative financial institution committed to
-            member welfare, transparent governance, and sustainable
-            financial growth.
+            Official online admission portal for Diploma programmes.
+            Apply, verify documents, view merit status, and track
+            admission progress securely.
           </p>
 
           <div className="mt-6 flex flex-wrap justify-center md:justify-start gap-3 text-sm">
             <span className="px-4 py-2 bg-white rounded-full shadow">
-              📍 Goli Hole, Mangalore
+              🎓 Diploma Admissions
             </span>
             <span className="px-4 py-2 bg-white rounded-full shadow">
-              🏛 Reg. No: 58396 / 2024-25
+              📍 Mangalore, Karnataka
+            </span>
+            <span className="px-4 py-2 bg-white rounded-full shadow">
+              🏛 Autonomous Institution
             </span>
           </div>
 
           <p className="mt-6 text-xs text-gray-500 italic">
-            * Member and Admin access is available via secure login.
+            * Student, Verification Officer, HOD, and Admin login available.
           </p>
         </div>
 
         {/* RIGHT IMAGE */}
         <div className="flex justify-center">
           <img
-            src="https://images.unsplash.com/photo-1601597111158-2fceff292cdc"
-            alt="Co-operative Society"
+            src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1"
+            alt="KPT Admissions"
             className="w-full max-w-md rounded-2xl shadow-xl object-cover"
           />
         </div>
       </section>
 
-      {/* ================= SERVICES SECTION ================= */}
+      {/* ================= ADMISSION PROCESS SECTION ================= */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 py-16 sm:py-20">
         <h2 className="text-2xl sm:text-3xl font-semibold text-center">
-          Our Financial Services
+          Admission Process
         </h2>
 
         <p className="mt-4 text-center text-gray-600 max-w-2xl mx-auto text-sm sm:text-base">
-          We provide secure, member-friendly financial solutions designed
-          to support personal growth and community development.
+          A transparent and structured admission workflow designed
+          for Diploma applicants under the autonomous system.
         </p>
 
         <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {[
             {
-              title: "Loans",
-              icon: "💰",
-              desc: "Personal and business loans with reasonable interest rates.",
+              title: "Online Application",
+              icon: "📝",
+              desc: "Students apply by entering SSLC / PUC details and selecting preferred branches.",
             },
             {
-              title: "Fixed Deposits",
-              icon: "🏦",
-              desc: "Safe investments with assured returns and flexible tenure.",
+              title: "Reservation Selection",
+              icon: "🏷️",
+              desc: "Choose applicable reservations like Category, Rural, Kannada Medium, HK Region.",
             },
             {
-              title: "Recurring Deposits",
-              icon: "📆",
-              desc: "Monthly savings plans to build disciplined habits.",
+              title: "Document Verification",
+              icon: "📂",
+              desc: "Physical document verification at the institute on the scheduled date.",
             },
             {
-              title: "Share Capital",
+              title: "Merit List Generation",
               icon: "📊",
-              desc: "Ownership participation in society growth.",
+              desc: "Merit list prepared based on eligibility and academic performance.",
             },
             {
-              title: "CD Accounts",
-              icon: "📜",
-              desc: "Secure compulsory deposit schemes.",
+              title: "Seat Allotment",
+              icon: "🎯",
+              desc: "Seats allotted department-wise and forwarded to respective HODs.",
             },
             {
-              title: "Member Welfare",
-              icon: "🤝",
-              desc: "Long-term financial and social well-being.",
+              title: "Department Allocation",
+              icon: "🏫",
+              desc: "Final admitted students are mapped to departments and HOD dashboards.",
             },
           ].map((item) => (
             <div
@@ -110,15 +113,15 @@ export default function Landing() {
       <footer className="bg-slate-900 text-slate-300 py-8 sm:py-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center text-sm">
           <p className="font-medium text-white">
-            Shri Brahmalingeshwara Credit Co-operative Society (N)
+            Karnataka Polytechnic, Mangalore
           </p>
 
           <p className="mt-2 text-xs sm:text-sm">
-            Goli Hole, Mangalore · Karnataka
+            Autonomous Diploma Institution · Karnataka
           </p>
 
           <p className="mt-4 text-xs text-slate-400">
-            © {new Date().getFullYear()} All Rights Reserved
+            © {new Date().getFullYear()} KPT Admissions Portal · All Rights Reserved
           </p>
         </div>
       </footer>
