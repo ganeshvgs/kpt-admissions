@@ -3,7 +3,7 @@ import { useAuth, useUser } from "@clerk/clerk-react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { 
-  User, MapPin, BookOpen, Layers, CheckCircle, AlertCircle, Camera 
+  User, MapPin, BookOpen, Layers, CheckCircle, AlertCircle, Camera, FileText 
 } from "lucide-react"; 
 
 // --- CONFIGURATION ---
@@ -30,7 +30,7 @@ const EMPTY_FORM = {
     dob: "",
     gender: "",
     religion: "",
-    caste: "",
+    caste: "", // Only used if needed apart from category details
     nationality: "INDIAN",
     aadharNumber: "",
     satsNumber: "",
@@ -71,7 +71,8 @@ const EMPTY_FORM = {
 
 // --- HELPER COMPONENTS ---
 
-const InputGroup = ({ label, value, onChange, type = "text", placeholder, required = false, disabled = false, className = "" }) => (
+// Updated: 'required' defaults to true for visual consistency in this strict form
+const InputGroup = ({ label, value, onChange, type = "text", placeholder, required = true, disabled = false, className = "" }) => (
   <div className={`flex flex-col group ${className}`}>
     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 transition-colors group-focus-within:text-blue-700">
       {label} {required && <span className="text-red-500">*</span>}
@@ -82,15 +83,17 @@ const InputGroup = ({ label, value, onChange, type = "text", placeholder, requir
       value={value || ""}
       onChange={onChange}
       placeholder={placeholder}
-      className="w-full bg-white border border-slate-300 text-slate-900 text-sm rounded p-2.5 outline-none transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100 disabled:text-slate-500"
+      className={`w-full bg-white border text-slate-900 text-sm rounded p-2.5 outline-none transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-slate-100 disabled:text-slate-500 ${
+        required && !value && !disabled ? "border-slate-300" : "border-slate-300"
+      }`}
     />
   </div>
 );
 
-const SelectGroup = ({ label, value, onChange, options, disabled = false, placeholder = "Select" }) => (
+const SelectGroup = ({ label, value, onChange, options, disabled = false, placeholder = "Select", required = true }) => (
   <div className="flex flex-col group">
     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5 group-focus-within:text-blue-700">
-      {label}
+      {label} {required && <span className="text-red-500">*</span>}
     </label>
     <select
       disabled={disabled}
@@ -119,7 +122,7 @@ const SectionHeader = ({ icon: Icon, title }) => (
 
 export default function ApplicationForm() {
   const { getToken } = useAuth();
-  const { user } = useUser(); // Used to auto-fill email if empty
+  const { user } = useUser();
   const [form, setForm] = useState(null);
   const [status, setStatus] = useState("DRAFT");
   const [remarks, setRemarks] = useState("");
@@ -127,6 +130,9 @@ export default function ApplicationForm() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   
+  // Declaration Checkbox State
+  const [declarationChecked, setDeclarationChecked] = useState(false);
+
   // Image handling
   const [uploadingImg, setUploadingImg] = useState(false);
   const [previewUrl, setPreviewUrl] = useState("");
@@ -138,14 +144,12 @@ export default function ApplicationForm() {
     const fetchApplication = async () => {
       try {
         const token = await getToken();
-        // IMPORTANT: Assumes VITE_API_URL includes "/api" (e.g., http://localhost:5000/api)
         const res = await axios.get(`${import.meta.env.VITE_API_URL}/applications/my`, {
           headers: { Authorization: `Bearer ${token}` }
         });
 
         if (res.data.application) {
           const app = res.data.application;
-          // Merge with empty form to ensure all fields exist (prevents undefined errors)
           const mergedForm = {
             ...EMPTY_FORM,
             ...app,
@@ -164,8 +168,11 @@ export default function ApplicationForm() {
           setStatus(app.status);
           setRemarks(app.remarks || "");
           setEditable(app.status === "DRAFT" || app.status === "CORRECTION_REQUIRED");
+          // If already submitted, declaration was agreed to
+          if(app.status !== "DRAFT" && app.status !== "CORRECTION_REQUIRED") {
+            setDeclarationChecked(true);
+          }
         } else {
-          // New User - Auto fill email/name from Clerk if available
           const initialForm = { ...EMPTY_FORM };
           if(user) {
              initialForm.personalDetails.email = user.primaryEmailAddress?.emailAddress || "";
@@ -217,7 +224,6 @@ export default function ApplicationForm() {
   const handleMarksChange = (section, type, field, value) => {
      const updatedSection = { ...form[section], [field]: value };
      
-     // Determine matching fields based on what was changed
      let obtField, maxField, targetPerc;
      
      if(field.includes('Obtained')) {
@@ -247,7 +253,6 @@ export default function ApplicationForm() {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Local preview before upload
     const localUrl = URL.createObjectURL(file);
     setPreviewUrl(localUrl);
     setImageError(false);
@@ -256,7 +261,7 @@ export default function ApplicationForm() {
     try {
       const token = await getToken();
       const formData = new FormData();
-      formData.append("image", file); // Changed "photo" to "image" to match backend 'uploadSingleImage'
+      formData.append("image", file);
 
       const res = await axios.post(
         `${import.meta.env.VITE_API_URL}/upload/image`,
@@ -264,41 +269,88 @@ export default function ApplicationForm() {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // Backend returns { url: "cloudinary_url" }
       update("personalDetails", "photo", res.data.url);
       toast.success("Photo uploaded successfully!");
     } catch (err) {
       console.error(err);
       toast.error("Image upload failed. Please try again.");
-      setPreviewUrl(""); // Reset if failed
+      setPreviewUrl("");
     } finally {
       setUploadingImg(false);
-      // Clear input so same file can be selected again if needed
       if(fileInputRef.current) fileInputRef.current.value = "";
     }
   };
-  
 
-  // --- SUBMIT ---
+  // --- VALIDATION & SUBMIT ---
+  
+  const validateForm = () => {
+    const { personalDetails, academicDetails, categoryDetails, branchPreferences, admissionType } = form;
+
+    // 1. Personal Details Validation
+    const requiredPersonal = [
+      'name', 'fatherName', 'motherName', 'dob', 'gender', 
+      'religion', 'nationality', 'aadharNumber', 'satsNumber', 
+      'address', 'district', 'state', 'pincode', 'mobile', 'email', 'photo'
+    ];
+
+    for (let field of requiredPersonal) {
+      if (!personalDetails[field] || personalDetails[field].trim() === "") {
+        toast.error(`Please fill Personal Details: ${field.replace(/([A-Z])/g, ' $1').trim()}`);
+        return false;
+      }
+    }
+
+    // 2. Academic Validation
+    if (admissionType === "NORMAL") {
+      const requiredSSLC = ['board', 'sslcRegisterNumber', 'sslcPassingYear', 'sslcMaxMarks', 'sslcObtainedMarks', 'scienceMarks', 'mathsMarks'];
+      for (let field of requiredSSLC) {
+        if (!academicDetails[field]) {
+          toast.error(`Please fill SSLC Details: ${field.replace('sslc', '').replace(/([A-Z])/g, ' $1').trim()}`);
+          return false;
+        }
+      }
+    } else {
+      // Lateral Entry
+      const requiredLateral = ['qualifyingExam', 'itiPucRegisterNumber', 'itiPucPassingYear', 'itiPucMaxMarks', 'itiPucObtainedMarks'];
+      for (let field of requiredLateral) {
+        if (!academicDetails[field]) {
+           toast.error(`Please fill Qualifying Exam Details: ${field.replace('itiPuc', '').replace(/([A-Z])/g, ' $1').trim()}`);
+           return false;
+        }
+      }
+    }
+
+    // 3. Category Validation
+    const requiredCategory = ['category', 'casteName', 'annualIncome'];
+    for (let field of requiredCategory) {
+      if (!categoryDetails[field]) {
+        toast.error(`Please fill Category Details: ${field.replace(/([A-Z])/g, ' $1').trim()}`);
+        return false;
+      }
+    }
+
+    // 4. Branch Preference
+    if (branchPreferences.length === 0) {
+      toast.error("Please select at least one Branch Preference");
+      return false;
+    }
+
+    // 5. Declaration
+    if (!declarationChecked) {
+      toast.error("You must accept the declaration before submitting.");
+      return false;
+    }
+
+    return true;
+  };
+
   const submit = async () => {
-    if (!form.personalDetails.name || !form.personalDetails.mobile) {
-      toast.error("Please fill Name and Mobile Number");
-      return;
-    }
-    if (!form.personalDetails.photo) {
-      toast.error("Please upload your photo before submitting");
-      return;
-    }
-    if (form.branchPreferences.length === 0) {
-      toast.error("Please select at least one branch preference");
-      return;
-    }
+    if (!validateForm()) return;
 
     setSubmitting(true);
     try {
       const token = await getToken();
-      // If status is CORRECTION_REQUIRED, use PUT, otherwise POST for initial creation
-      const method = (status === "CORRECTION_REQUIRED" || status === "DRAFT" && form._id) ? axios.put : axios.post;
+      const method = (status === "CORRECTION_REQUIRED" || (status === "DRAFT" && form._id)) ? axios.put : axios.post;
       
       await method(`${import.meta.env.VITE_API_URL}/applications`, form, {
         headers: { Authorization: `Bearer ${token}` }
@@ -396,7 +448,7 @@ export default function ApplicationForm() {
             
             {/* PHOTO UPLOAD */}
             <div className="w-full lg:w-56 flex-shrink-0 flex flex-col items-center">
-              <p className="text-xs font-bold text-slate-500 uppercase mb-2">Candidate Photo</p>
+              <p className="text-xs font-bold text-slate-500 uppercase mb-2">Candidate Photo <span className="text-red-500">*</span></p>
                <div className="w-40 h-48 bg-slate-100 rounded border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden relative shadow-sm group hover:border-blue-400 transition-colors">
                  
                  {previewUrl && !imageError ? (
@@ -425,11 +477,11 @@ export default function ApplicationForm() {
                    <Camera className="w-4 h-4" />
                    {previewUrl ? "Change Photo" : "Upload Photo"}
                    <input 
-                      ref={fileInputRef}
-                      type="file" 
-                      className="hidden" 
-                      accept="image/*" 
-                      onChange={handleImageChange} 
+                     ref={fileInputRef}
+                     type="file" 
+                     className="hidden" 
+                     accept="image/*" 
+                     onChange={handleImageChange} 
                    />
                  </label>
                )}
@@ -439,19 +491,20 @@ export default function ApplicationForm() {
             <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-5">
               <InputGroup label="Candidate Name" value={form.personalDetails.name} onChange={(e) => update("personalDetails", "name", e.target.value)} required disabled={!editable} className="md:col-span-2" />
               
-              <InputGroup label="SATS Number" value={form.personalDetails.satsNumber} onChange={(e) => update("personalDetails", "satsNumber", e.target.value)} disabled={!editable} />
-              <InputGroup label="Aadhar Number" value={form.personalDetails.aadharNumber} onChange={(e) => update("personalDetails", "aadharNumber", e.target.value)} placeholder="12 Digit Number" disabled={!editable} />
+              <InputGroup label="SATS Number" value={form.personalDetails.satsNumber} onChange={(e) => update("personalDetails", "satsNumber", e.target.value)} required disabled={!editable} />
+              <InputGroup label="Aadhar Number" value={form.personalDetails.aadharNumber} onChange={(e) => update("personalDetails", "aadharNumber", e.target.value)} placeholder="12 Digit Number" required disabled={!editable} />
 
-              <InputGroup label="Father's Name" value={form.personalDetails.fatherName} onChange={(e) => update("personalDetails", "fatherName", e.target.value)} disabled={!editable} />
-              <InputGroup label="Mother's Name" value={form.personalDetails.motherName} onChange={(e) => update("personalDetails", "motherName", e.target.value)} disabled={!editable} />
+              <InputGroup label="Father's Name" value={form.personalDetails.fatherName} onChange={(e) => update("personalDetails", "fatherName", e.target.value)} required disabled={!editable} />
+              <InputGroup label="Mother's Name" value={form.personalDetails.motherName} onChange={(e) => update("personalDetails", "motherName", e.target.value)} required disabled={!editable} />
               
-              <InputGroup label="Date of Birth" type="date" value={form.personalDetails.dob} onChange={(e) => update("personalDetails", "dob", e.target.value)} disabled={!editable} />
+              <InputGroup label="Date of Birth" type="date" value={form.personalDetails.dob} onChange={(e) => update("personalDetails", "dob", e.target.value)} required disabled={!editable} />
               
               <SelectGroup 
                 label="Gender" 
                 value={form.personalDetails.gender} 
                 onChange={(e) => update("personalDetails", "gender", e.target.value)} 
                 options={["Male", "Female", "Transgender"]} 
+                required
                 disabled={!editable} 
               />
               
@@ -460,10 +513,11 @@ export default function ApplicationForm() {
                 value={form.personalDetails.religion} 
                 onChange={(e) => update("personalDetails", "religion", e.target.value)} 
                 options={RELIGIONS} 
+                required
                 disabled={!editable} 
               />
               
-              <InputGroup label="Nationality" value={form.personalDetails.nationality} onChange={(e) => update("personalDetails", "nationality", e.target.value)} disabled={!editable} />
+              <InputGroup label="Nationality" value={form.personalDetails.nationality} onChange={(e) => update("personalDetails", "nationality", e.target.value)} required disabled={!editable} />
             </div>
           </div>
 
@@ -476,16 +530,17 @@ export default function ApplicationForm() {
                  value={form.personalDetails.address} 
                  onChange={(e) => update("personalDetails", "address", e.target.value)} 
                  disabled={!editable} 
+                 required
                  className="md:col-span-3"
                  placeholder="House No, Street, Landmark"
                />
-               <InputGroup label="State" value={form.personalDetails.state} onChange={(e) => update("personalDetails", "state", e.target.value)} disabled={!editable} />
-               <InputGroup label="District" value={form.personalDetails.district} onChange={(e) => update("personalDetails", "district", e.target.value)} disabled={!editable} />
-               <InputGroup label="Pincode" value={form.personalDetails.pincode} onChange={(e) => update("personalDetails", "pincode", e.target.value)} disabled={!editable} />
+               <InputGroup label="State" value={form.personalDetails.state} onChange={(e) => update("personalDetails", "state", e.target.value)} required disabled={!editable} />
+               <InputGroup label="District" value={form.personalDetails.district} onChange={(e) => update("personalDetails", "district", e.target.value)} required disabled={!editable} />
+               <InputGroup label="Pincode" value={form.personalDetails.pincode} onChange={(e) => update("personalDetails", "pincode", e.target.value)} required disabled={!editable} />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-5 pt-5 border-t border-slate-200">
                <InputGroup label="Mobile Number" value={form.personalDetails.mobile} onChange={(e) => update("personalDetails", "mobile", e.target.value)} required disabled={!editable} />
-               <InputGroup label="Email ID" type="email" value={form.personalDetails.email} onChange={(e) => update("personalDetails", "email", e.target.value)} disabled={!editable} />
+               <InputGroup label="Email ID" type="email" value={form.personalDetails.email} onChange={(e) => update("personalDetails", "email", e.target.value)} required disabled={!editable} />
             </div>
           </div>
 
@@ -504,42 +559,48 @@ export default function ApplicationForm() {
                    value={form.academicDetails.qualifyingExam} 
                    onChange={(e) => update("academicDetails", "qualifyingExam", e.target.value)} 
                    options={["ITI (2 Years)", "PUC (Science)"]} 
+                   required
                    disabled={!editable} 
                   />
-                 <InputGroup label="Reg Number" value={form.academicDetails.itiPucRegisterNumber} onChange={(e) => update("academicDetails", "itiPucRegisterNumber", e.target.value)} disabled={!editable} />
-                 <InputGroup label="Year of Passing" value={form.academicDetails.itiPucPassingYear} onChange={(e) => update("academicDetails", "itiPucPassingYear", e.target.value)} disabled={!editable} />
+                 <InputGroup label="Reg Number" value={form.academicDetails.itiPucRegisterNumber} onChange={(e) => update("academicDetails", "itiPucRegisterNumber", e.target.value)} required disabled={!editable} />
+                 <InputGroup label="Year of Passing" value={form.academicDetails.itiPucPassingYear} onChange={(e) => update("academicDetails", "itiPucPassingYear", e.target.value)} required disabled={!editable} />
               </div>
               <div className="grid grid-cols-3 gap-5">
-                <InputGroup label="Max Marks" type="number" value={form.academicDetails.itiPucMaxMarks} onChange={(e) => handleMarksChange("academicDetails", "iti", "itiPucMaxMarks", e.target.value)} disabled={!editable} />
-                <InputGroup label="Obtained" type="number" value={form.academicDetails.itiPucObtainedMarks} onChange={(e) => handleMarksChange("academicDetails", "iti", "itiPucObtainedMarks", e.target.value)} disabled={!editable} />
-                <InputGroup label="Percentage" value={form.academicDetails.itiPucPercentage} disabled={true} className="bg-white" />
+                <InputGroup label="Max Marks" type="number" value={form.academicDetails.itiPucMaxMarks} onChange={(e) => handleMarksChange("academicDetails", "iti", "itiPucMaxMarks", e.target.value)} required disabled={!editable} />
+                <InputGroup label="Obtained" type="number" value={form.academicDetails.itiPucObtainedMarks} onChange={(e) => handleMarksChange("academicDetails", "iti", "itiPucObtainedMarks", e.target.value)} required disabled={!editable} />
+                <InputGroup label="Percentage" value={form.academicDetails.itiPucPercentage} disabled={true} required={false} className="bg-white" />
               </div>
             </div>
           )}
 
           {/* SSLC SECTION */}
           <div className="border border-slate-200 rounded-lg p-6 mb-6">
-            <h4 className="font-bold text-slate-700 mb-4 text-sm uppercase tracking-wider">SSLC / 10th Standard</h4>
+            <h4 className="font-bold text-slate-700 mb-4 text-sm uppercase tracking-wider">SSLC / 10th Standard {form.admissionType === "LATERAL" && "(Required for Reference)"}</h4>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-5 mb-5">
                <SelectGroup 
                  label="Board" 
                  value={form.academicDetails.board} 
                  onChange={(e) => update("academicDetails", "board", e.target.value)} 
                  options={["SSLC (Karnataka)", "CBSE", "ICSE", "Other"]} 
+                 required
                  disabled={!editable} 
                />
                <InputGroup label="Register No." value={form.academicDetails.sslcRegisterNumber} onChange={(e) => update("academicDetails", "sslcRegisterNumber", e.target.value)} required disabled={!editable} />
-               <InputGroup label="Passing Year" value={form.academicDetails.sslcPassingYear} onChange={(e) => update("academicDetails", "sslcPassingYear", e.target.value)} disabled={!editable} />
+               <InputGroup label="Passing Year" value={form.academicDetails.sslcPassingYear} onChange={(e) => update("academicDetails", "sslcPassingYear", e.target.value)} required disabled={!editable} />
             </div>
             
             <div className="grid grid-cols-2 md:grid-cols-5 gap-5">
-              <InputGroup label="Total Max" type="number" value={form.academicDetails.sslcMaxMarks} onChange={(e) => handleMarksChange("academicDetails", "sslc", "sslcMaxMarks", e.target.value)} disabled={!editable} />
-              <InputGroup label="Total Obtained" type="number" value={form.academicDetails.sslcObtainedMarks} onChange={(e) => handleMarksChange("academicDetails", "sslc", "sslcObtainedMarks", e.target.value)} disabled={!editable} />
+              <InputGroup label="Total Max" type="number" value={form.academicDetails.sslcMaxMarks} onChange={(e) => handleMarksChange("academicDetails", "sslc", "sslcMaxMarks", e.target.value)} required disabled={!editable} />
+              <InputGroup label="Total Obtained" type="number" value={form.academicDetails.sslcObtainedMarks} onChange={(e) => handleMarksChange("academicDetails", "sslc", "sslcObtainedMarks", e.target.value)} required disabled={!editable} />
               
-              <InputGroup label="Percentage" value={form.academicDetails.sslcPercentage} disabled={true} className="bg-slate-50" />
+              <InputGroup label="Percentage" value={form.academicDetails.sslcPercentage} disabled={true} required={false} className="bg-slate-50" />
               
-              <InputGroup label="Science Marks" type="number" value={form.academicDetails.scienceMarks} onChange={(e) => update("academicDetails", "scienceMarks", e.target.value)} disabled={!editable} />
-              <InputGroup label="Maths Marks" type="number" value={form.academicDetails.mathsMarks} onChange={(e) => update("academicDetails", "mathsMarks", e.target.value)} disabled={!editable} />
+              {form.admissionType === "NORMAL" && (
+                <>
+                  <InputGroup label="Science Marks" type="number" value={form.academicDetails.scienceMarks} onChange={(e) => update("academicDetails", "scienceMarks", e.target.value)} required disabled={!editable} />
+                  <InputGroup label="Maths Marks" type="number" value={form.academicDetails.mathsMarks} onChange={(e) => update("academicDetails", "mathsMarks", e.target.value)} required disabled={!editable} />
+                </>
+              )}
             </div>
           </div>
 
@@ -551,10 +612,11 @@ export default function ApplicationForm() {
               value={form.categoryDetails.category} 
               onChange={(e) => update("categoryDetails", "category", e.target.value)} 
               options={["GM", "SC", "ST", "Cat-1", "2A", "2B", "3A", "3B"]} 
+              required
               disabled={!editable} 
             />
-            <InputGroup label="Caste Name" value={form.categoryDetails.casteName} onChange={(e) => update("categoryDetails", "casteName", e.target.value)} disabled={!editable} />
-            <InputGroup label="Annual Income (₹)" type="number" value={form.categoryDetails.annualIncome} onChange={(e) => update("categoryDetails", "annualIncome", e.target.value)} disabled={!editable} />
+            <InputGroup label="Caste Name" value={form.categoryDetails.casteName} onChange={(e) => update("categoryDetails", "casteName", e.target.value)} required disabled={!editable} />
+            <InputGroup label="Annual Income (₹)" type="number" value={form.categoryDetails.annualIncome} onChange={(e) => update("categoryDetails", "annualIncome", e.target.value)} required disabled={!editable} />
           </div>
           
           <div className="flex flex-wrap gap-4">
@@ -582,7 +644,7 @@ export default function ApplicationForm() {
           <SectionHeader icon={Layers} title="Branch Preferences" />
           <div className="bg-slate-50 rounded-lg p-6 border border-slate-200 shadow-inner">
              <div className="flex justify-between items-center mb-4">
-               <p className="text-xs font-bold text-slate-500 uppercase">Select branches in order of priority</p>
+               <p className="text-xs font-bold text-slate-500 uppercase">Select branches in order of priority <span className="text-red-500">*</span></p>
                <span className="text-xs bg-slate-200 px-2 py-1 rounded text-slate-600">
                  Selected: {form.branchPreferences.length}
                </span>
@@ -622,9 +684,24 @@ export default function ApplicationForm() {
           <div className="mt-12 pt-8 border-t border-slate-200 flex flex-col items-center">
             {editable ? (
               <>
-                <p className="text-sm text-slate-500 mb-4 text-center max-w-lg">
-                  I hereby declare that the entries made by me in this application form are correct to the best of my knowledge and belief.
-                </p>
+                {/* DECLARATION CHECKBOX */}
+                <div className="w-full max-w-2xl bg-yellow-50 border border-yellow-200 rounded-lg p-5 mb-6 shadow-sm">
+                  <div className="flex items-start gap-3">
+                    <input 
+                      type="checkbox" 
+                      id="declaration" 
+                      checked={declarationChecked}
+                      onChange={(e) => setDeclarationChecked(e.target.checked)}
+                      className="mt-1.5 w-5 h-5 text-blue-600 rounded border-gray-300 focus:ring-blue-500 cursor-pointer"
+                    />
+                    <label htmlFor="declaration" className="text-sm text-slate-700 cursor-pointer select-none leading-relaxed">
+                      I, <span className="font-bold text-blue-900 border-b border-blue-900 px-1">{form.personalDetails.name || "__________________"}</span>, 
+                      {form.personalDetails.fatherName && <span> S/D/o <span className="font-bold text-blue-900 border-b border-blue-900 px-1">{form.personalDetails.fatherName}</span>,</span>} 
+                      hereby declare that the entries made by me in this application form are correct to the best of my knowledge and belief. I agree to the rules and regulations of the institution.
+                    </label>
+                  </div>
+                </div>
+
                 <button
                   onClick={submit}
                   disabled={uploadingImg || submitting}

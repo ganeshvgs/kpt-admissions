@@ -12,6 +12,7 @@ import studentSeatRoutes from "./routes/student-seat.routes.js";
 import verificationRoutes from "./routes/verification.routes.js";
 import finalRoutes from "./routes/final.routes.js";
 import uploadRoutes from "./routes/upload.routes.js";
+import adminSeatRoutes from "./routes/admin.seat.routes.js"
 import pdfRoutes from "./routes/pdf.routes.js";
 import physicalVerificationRoutes from "./routes/physicalVerification.routes.js";
 dotenv.config();
@@ -38,6 +39,7 @@ app.use("/api/applications", applicationRoutes);
 app.use("/api/final", finalRoutes);
 app.use("/api/merit", meritRoutes);
 app.use("/api/student", studentSeatRoutes);
+app.use("/api/admin/seats", adminSeatRoutes);
 app.use("/api/seats", seatRoutes);
 app.get("/", (req, res) => {
   res.send("KPT Admissions Backend Running");
