@@ -4,30 +4,42 @@ export const createApplication = async (req, res) => {
   try {
     const clerkUserId = req.auth.userId;
 
-    const existing = await Application.findOne({
-      studentClerkId: clerkUserId,
-    });
+    // 1. Check if application exists
+    let application = await Application.findOne({ studentClerkId: clerkUserId });
 
-    if (existing) {
-      return res
-        .status(400)
-        .json({ message: "Application already submitted" });
+    // 2. Prevent editing if already submitted (optional logic based on your needs)
+    if (application && application.status === "SUBMITTED") {
+      // Allow updates only if you want them to overwrite, otherwise block:
+      // return res.status(400).json({ message: "Already submitted" });
     }
 
-    const application = new Application({
-      studentClerkId: clerkUserId,
+    // 3. Prepare Data (Sanitize if needed, or just use req.body)
+    const updateData = {
       ...req.body,
       status: "SUBMITTED",
-    });
+      studentClerkId: clerkUserId // Ensure ID is never overwritten
+    };
 
-    await application.save();
+    if (application) {
+      // Update existing
+      application.set(updateData); // .set() is safer than Object.assign for Mongoose
+      await application.save();
+      return res.status(200).json({ message: "Application Updated", application });
+    } else {
+      // Create new
+      application = new Application(updateData);
+      await application.save();
+      return res.status(201).json({ message: "Application Created", application });
+    }
 
-    res.status(201).json({ application });
   } catch (err) {
-    res.status(500).json({ message: "Submission failed" });
+    // 🔥 THIS LOG IS CRITICAL FOR DEBUGGING
+    console.error("❌ Submission Error:", err); 
+    
+    // Send the actual error message to the frontend so you can see it in the Toast
+    res.status(500).json({ message: err.message || "Submission failed" });
   }
 };
-
 export const getMyApplication = async (req, res) => {
   const app = await Application.findOne({
     studentClerkId: req.auth.userId,

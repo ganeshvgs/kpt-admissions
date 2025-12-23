@@ -1,9 +1,13 @@
 import User from "../models/User.js";
 
-const STAFF_ROLES = ["admin", "verification_officer", "hod", "principal"];
+// Only these roles are visible in this panel
+const STAFF_ROLES = ["admin", "verification_officer"];
 
 export const getAllUsers = async (req, res) => {
-  const users = await User.find().sort({ createdAt: -1 });
+  // Query Filter: Exclude students immediately from DB
+  const users = await User.find({ 
+    role: { $in: STAFF_ROLES } 
+  }).sort({ createdAt: -1 });
 
   res.json(
     users.map((u) => ({
@@ -21,10 +25,9 @@ export const createUser = async (req, res) => {
     return res.status(400).json({ error: "Email & role required" });
   }
 
+  // Strict check: Only allow creating Staff
   if (!STAFF_ROLES.includes(role)) {
-    return res
-      .status(400)
-      .json({ error: "Cannot create student manually" });
+    return res.status(400).json({ error: "Invalid role selected" });
   }
 
   const exists = await User.findOne({ email });
@@ -56,4 +59,20 @@ export const updateUserRole = async (req, res) => {
   await user.save();
 
   res.json({ success: true });
+};
+
+// NEW: Delete Controller
+export const deleteUser = async (req, res) => {
+  const { userId } = req.params;
+
+  const user = await User.findById(userId);
+  if (!user) return res.status(404).json({ error: "User not found" });
+
+  // Security: Prevent deleting Admins via API
+  if (user.role === 'admin') {
+     return res.status(403).json({ error: "Cannot delete admin users." });
+  }
+
+  await User.findByIdAndDelete(userId);
+  res.json({ success: true, message: "User deleted successfully" });
 };

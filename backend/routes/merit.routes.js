@@ -1,17 +1,26 @@
 import express from "express";
-import { generateMeritList } from "../controllers/merit.controller.js";
+import {
+  generateMeritList,
+  getMeritList,
+} from "../controllers/merit.controller.js";
 import { requireAuth, requireRole } from "../middlewares/auth.js";
 
 const router = express.Router();
 
-/**
- * Generate merit list (Principal only)
- */
+// generate merit
 router.post(
   "/generate",
   requireAuth,
-  requireRole(["principal"]),
+  requireRole(["verification_officer"]),
   generateMeritList
+);
+
+// 🔥 view merit list
+router.get(
+  "/list",
+  requireAuth,
+  requireRole(["verification_officer"]),
+  getMeritList
 );
 
 export default router;

@@ -1,7 +1,6 @@
 import express from "express";
 import {
-  allocateSeats,
-  allocateNextRound,
+  allocateSeats
 } from "../controllers/seat.controller.js";
 
 import { requireAuth, requireRole } from "../middlewares/auth.js";
@@ -15,19 +14,9 @@ const router = express.Router();
 router.post(
   "/allocate",
   requireAuth,
-  requireRole(["hod", "admin"]),
+  requireRole(["hod", "admin", "verification_officer"]),
   allocateSeats
 );
 
-/**
- * Seat allocation (Next rounds)
- * Allowed: HOD, Admin
- */
-router.post(
-  "/allocate/round",
-  requireAuth,
-  requireRole(["hod", "admin"]),
-  allocateNextRound
-);
 
 export default router;

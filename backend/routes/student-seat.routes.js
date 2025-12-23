@@ -8,7 +8,6 @@ import { requireAuth, requireRole } from "../middlewares/auth.js";
 
 const router = express.Router();
 
-// View seat allotment
 router.get(
   "/seat",
   requireAuth,
@@ -16,7 +15,6 @@ router.get(
   getAllottedSeat
 );
 
-// Accept / Reject / Upgrade
 router.post(
   "/seat/respond",
   requireAuth,

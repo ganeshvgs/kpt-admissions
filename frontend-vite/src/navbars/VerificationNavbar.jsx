@@ -12,14 +12,43 @@ export default function VerificationNavbar() {
   return (
     <nav className="sticky top-0 z-50 bg-white shadow">
       <div className="px-6 py-3 flex justify-between items-center">
-        <h1 className="font-bold text-indigo-700">Verification Officer</h1>
+        <h1 className="font-bold text-indigo-700">
+          Verification Officer
+        </h1>
 
         <div className="flex gap-6 items-center">
-          <Link to="/verification" className={active("/verification")}>
+          <Link
+            to="/verification"
+            className={active("/verification")}
+          >
             Verify Applications
           </Link>
-          <Link to="/verification/physical" className={active("/verification/physical")}>
+
+          <Link
+            to="/verification/physical"
+            className={active("/verification/physical")}
+          >
             Physical Verification
+          </Link>
+
+          <Link
+            to="/verification/merit"
+            className={active("/verification/merit")}
+          >
+            Generate Merit
+          </Link>
+           <Link
+            to="/verification/seat-allocation"
+            className={active("/verification/seat-allocation")}
+          >
+            Seat Aloaction
+          </Link>
+
+          <Link
+            to="/verification/final"
+            className={active("/verification/final")}
+          >
+            Final Approval
           </Link>
 
           <UserButton afterSignOutUrl="/" />

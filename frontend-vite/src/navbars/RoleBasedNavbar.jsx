@@ -5,9 +5,6 @@ import PublicNavbar from "./PublicNavbar";
 import StudentNavbar from "./StudentNavbar";
 import AdminNavbar from "./AdminNavbar";
 import VerificationNavbar from "./VerificationNavbar";
-import HodNavbar from "./HodNavbar";
-import PrincipalNavbar from "./PrincipalNavbar";
-import AccountsNavbar from "./AccountsNavbar";
 import LoadingNavbar from "./LoadingNavbar";
 
 export default function RoleBasedNavbar() {
@@ -20,25 +17,22 @@ export default function RoleBasedNavbar() {
   // Not logged in
   if (!user) return <PublicNavbar />;
 
-  // 🔥 Logged in but Mongo role NOT READY
+  // Mongo role still loading
   if (loading || !userRole) {
     return <LoadingNavbar />;
   }
 
-  // Role ready → correct navbar
+  // Role-based navbar
   switch (userRole) {
     case "admin":
       return <AdminNavbar />;
+
     case "verification_officer":
       return <VerificationNavbar />;
-    case "hod":
-      return <HodNavbar />;
-    case "principal":
-      return <PrincipalNavbar />;
-    case "accounts":
-      return <AccountsNavbar />;
+
     case "student":
       return <StudentNavbar />;
+
     default:
       return <StudentNavbar />;
   }

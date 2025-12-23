@@ -6,7 +6,8 @@ const userSchema = new mongoose.Schema(
     email: { type: String, required: true, unique: true },
     role: {
       type: String,
-      enum: ["student", "admin", "verification_officer", "hod", "principal"],
+      // Strictly defined roles
+      enum: ["student", "admin", "verification_officer"],
       default: "student",
     },
   },

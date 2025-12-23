@@ -3,6 +3,7 @@ import Application from "../models/application.model.js";
 export const getAcceptedStudents = async (req, res) => {
   try {
     const applications = await Application.find({
+      status: "PHYSICAL_VERIFICATION_PENDING", // ✅ FIX
       studentResponse: "ACCEPTED",
       seatLocked: true,
     }).sort({ rank: 1 });
@@ -20,26 +21,20 @@ export const verifyPhysicalDocuments = async (req, res) => {
     const { verified, remarks } = req.body;
 
     const application = await Application.findById(id);
-
     if (!application) {
       return res.status(404).json({ message: "Application not found" });
     }
 
+    application.physicalVerification = {
+      verified,
+      verifiedBy: req.auth.userId,
+      verifiedAt: new Date(),
+      remarks: remarks || "",
+    };
+
     if (verified) {
-      application.physicalVerification = {
-        verified: true,
-        verifiedBy: req.userId,
-        verifiedAt: new Date(),
-        remarks: remarks || "",
-      };
       application.status = "DOCUMENTS_VERIFIED";
     } else {
-      application.physicalVerification = {
-        verified: false,
-        verifiedBy: req.userId,
-        verifiedAt: new Date(),
-        remarks: remarks || "Verification failed",
-      };
       application.status = "DOCUMENTS_FAILED";
     }
 
@@ -49,7 +44,7 @@ export const verifyPhysicalDocuments = async (req, res) => {
       success: true,
       message: verified
         ? "Documents verified successfully"
-        : "Document verification failed",
+        : "Documents verification failed",
     });
   } catch (err) {
     console.error("❌ Physical verification failed:", err);

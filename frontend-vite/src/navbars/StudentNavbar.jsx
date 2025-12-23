@@ -21,10 +21,6 @@ export default function StudentNavbar() {
           <Link to="/student/application" className={active("/student/application")}>
             Application
           </Link>
-          <Link to="/student/seat" className={active("/student/seat")}>
-            Seat Status
-          </Link>
-
           <UserButton afterSignOutUrl="/" />
         </div>
       </div>

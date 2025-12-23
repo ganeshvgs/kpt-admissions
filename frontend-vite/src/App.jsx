@@ -8,44 +8,35 @@ import Unauthorized from "./pages/Unauthorized";
 
 import RequireRole from "./auth/RequireRole";
 
-// ADMIN
+// ================= ADMIN =================
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ManageUsers from "./pages/admin/manage-users";
 import CreateUser from "./pages/admin/CreateUser";
 
-// STUDENT
+// ================= STUDENT =================
 import StudentDashboard from "./pages/student/StudentDashboard";
 import ApplicationForm from "./pages/student/ApplicationForm";
-import SeatResponse from "./pages/student/SeatResponse";
 
-// VERIFICATION
+// ================= VERIFICATION =================
 import VerifyApplications from "./pages/verification/VerifyApplications";
 import PhysicalVerification from "./pages/verification/PhysicalVerification";
-
-// PRINCIPAL
-import GenerateMerit from "./pages/principal/GenerateMerit";
-import FinalApproval from "./pages/principal/FinalApproval";
-
-// HOD
-import SeatAllocation from "./pages/hod/SeatAllocation";
-import MultiRoundAllocation from "./pages/hod/MultiRoundAllocation";
-
-// ACCOUNTS
-import FeePayment from "./pages/accounts/FeePayment";
-
+import GenerateMerit from "./pages/verification/GenerateMerit";
+import FinalApproval from "./pages/verification/FinalApproval";
+import MeritList from "./pages/verification/MeritList";
+import SeatAllocation from "./pages/verification/SeatAllocation";
 export default function App() {
   return (
     <>
       <RoleBasedNavbar />
 
       <Routes>
-        {/* PUBLIC */}
+        {/* ===== PUBLIC ===== */}
         <Route path="/" element={<Landing />} />
         <Route path="/redirect" element={<DashboardRedirect />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
 
-        {/* ADMIN */}
+        {/* ===== ADMIN ===== */}
         <Route
           path="/admin"
           element={
@@ -59,7 +50,7 @@ export default function App() {
           <Route path="create-user" element={<CreateUser />} />
         </Route>
 
-        {/* STUDENT */}
+        {/* ===== STUDENT ===== */}
         <Route
           path="/student"
           element={
@@ -76,16 +67,8 @@ export default function App() {
             </RequireRole>
           }
         />
-        <Route
-          path="/student/seat"
-          element={
-            <RequireRole allowedRoles={["student"]}>
-              <SeatResponse />
-            </RequireRole>
-          }
-        />
-
-        {/* VERIFICATION OFFICER */}
+        
+        {/* ===== VERIFICATION OFFICER ===== */}
         <Route
           path="/verification"
           element={
@@ -102,52 +85,31 @@ export default function App() {
             </RequireRole>
           }
         />
-
-        {/* PRINCIPAL */}
         <Route
-          path="/principal/merit"
+          path="/verification/merit"
           element={
-            <RequireRole allowedRoles={["principal"]}>
+            <RequireRole allowedRoles={["verification_officer"]}>
               <GenerateMerit />
             </RequireRole>
           }
         />
         <Route
-          path="/principal/final"
+          path="/verification/final"
           element={
-            <RequireRole allowedRoles={["principal"]}>
+            <RequireRole allowedRoles={["verification_officer"]}>
               <FinalApproval />
             </RequireRole>
           }
         />
-
-        {/* HOD */}
-        <Route
-          path="/hod/allocate"
-          element={
-            <RequireRole allowedRoles={["hod"]}>
-              <SeatAllocation />
-            </RequireRole>
-          }
-        />
-        <Route
-          path="/hod/rounds"
-          element={
-            <RequireRole allowedRoles={["hod"]}>
-              <MultiRoundAllocation />
-            </RequireRole>
-          }
-        />
-
-        {/* ACCOUNTS */}
-        <Route
-          path="/accounts/fees"
-          element={
-            <RequireRole allowedRoles={["accounts"]}>
-              <FeePayment />
-            </RequireRole>
-          }
-        />
+        <Route path="/verification/merit-list" element={<MeritList />} />
+<Route
+  path="/verification/seat-allocation"
+  element={
+   < RequireRole allowedRoles={["verification_officer"]}>
+      <SeatAllocation />
+    </RequireRole>
+  }
+/>
       </Routes>
     </>
   );

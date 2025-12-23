@@ -1,18 +1,20 @@
 import Application from "../models/application.model.js";
 
-export const getFeePaidApplications = async (req, res) => {
+/* ================= GET VERIFIED APPLICATIONS ================= */
+export const getVerifiedApplications = async (req, res) => {
   try {
-    const apps = await Application.find({
-      status: "FEE_PAID",
+    const applications = await Application.find({
+      status: "DOCUMENTS_VERIFIED",
     }).sort({ rank: 1 });
 
-    res.json({ applications: apps });
+    res.json({ applications });
   } catch (err) {
-    console.error("❌ Fetch final approval list failed:", err);
+    console.error("❌ Fetch verified applications failed:", err);
     res.status(500).json({ message: "Failed to load applications" });
   }
 };
 
+/* ================= FINAL ADMISSION APPROVAL ================= */
 export const approveAdmission = async (req, res) => {
   try {
     const { id } = req.params;
@@ -21,6 +23,12 @@ export const approveAdmission = async (req, res) => {
     const application = await Application.findById(id);
     if (!application) {
       return res.status(404).json({ message: "Application not found" });
+    }
+
+    if (application.status !== "DOCUMENTS_VERIFIED") {
+      return res.status(400).json({
+        message: "Documents must be verified before final approval",
+      });
     }
 
     // 🎓 Generate Register Number
@@ -33,7 +41,7 @@ export const approveAdmission = async (req, res) => {
     application.finalAdmission = {
       registerNumber,
       classSection,
-      approvedBy: req.userId,
+      approvedBy: req.auth.userId,
       approvedAt: new Date(),
     };
 
