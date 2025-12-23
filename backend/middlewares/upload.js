@@ -28,4 +28,5 @@
   };
 
   // Middleware for single file
-  export const uploadSingleImage = [upload.single("photo"), uploadToCloudinary];
+export const uploadSingleImage = [upload.single("image"), uploadToCloudinary];
+

@@ -1,44 +1,26 @@
-//src/components/DashboardRedirect.jsx
 import { useEffect } from "react";
-import { useAuth } from "@clerk/clerk-react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { useAppAuth } from "../context/AuthContext";
 
 export default function DashboardRedirect() {
-  const { getToken } = useAuth();
+  const { userRole, loading } = useAppAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    (async () => {
-      const token = await getToken();
-      const res = await axios.get(
-        `${import.meta.env.VITE_API_URL}/users/sync`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
+    if (loading) return;
+    if (!userRole) return;
 
-      const role = res.data.user.role;
-
-      switch (role) {
-        case "admin":
-          navigate("/admin");
-          break;
-        case "verification_officer":
-          navigate("/verification");
-          break;
-        case "hod":
-          navigate("/hod/allocate");
-          break;
-        case "principal":
-          navigate("/principal/merit");
-          break;
-        case "accounts":
-          navigate("/accounts/fees");
-          break;
-        default:
-          navigate("/student");
-      }
-    })();
-  }, [getToken, navigate]);
+    switch (userRole) {
+      case "admin":
+        navigate("/admin", { replace: true });
+        break;
+      case "verification_officer":
+        navigate("/verification", { replace: true });
+        break;
+      default:
+        navigate("/student", { replace: true });
+    }
+  }, [userRole, loading, navigate]);
 
   return <p className="text-center mt-20">Redirecting…</p>;
 }

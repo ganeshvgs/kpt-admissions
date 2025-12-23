@@ -37,36 +37,11 @@ export const requireAuth = (req, res, next) => {
  */
 export const requireRole = (allowedRoles = []) => {
   return async (req, res, next) => {
-    try {
-      const clerkUserId = req.clerkUserId;
-
-      if (!clerkUserId) {
-        return res.status(401).json({ error: "Unauthorized" });
-      }
-
-      const user = await User.findOne({ clerkUserId });
-
-      if (!user) {
-        return res.status(403).json({
-          error: "User record not found",
-        });
-      }
-
-      if (!allowedRoles.includes(user.role)) {
-        return res.status(403).json({
-          error: "Forbidden",
-          role: user.role,
-        });
-      }
-
-      // Attach role info (optional but useful)
-      req.userRole = user.role;
-      req.user = user;
-
-      next();
-    } catch (err) {
-      console.error("❌ Role check error:", err);
+    const user = await User.findOne({ clerkUserId: req.clerkUserId });
+    if (!user || !allowedRoles.includes(user.role)) {
       return res.status(403).json({ error: "Forbidden" });
     }
+    req.user = user;
+    next();
   };
 };
