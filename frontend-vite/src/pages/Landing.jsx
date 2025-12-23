@@ -42,7 +42,7 @@ export default function Landing() {
         {/* RIGHT IMAGE */}
         <div className="flex justify-center">
           <img
-            src="https://images.unsplash.com/photo-1523050854058-8df90110c9f1"
+            src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSohoo_3dE0QLEFuPAGCQQZXaCbHBiWD__74w&s"
             alt="KPT Admissions"
             className="w-full max-w-md rounded-2xl shadow-xl object-cover"
           />
