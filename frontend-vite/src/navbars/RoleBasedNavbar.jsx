@@ -11,28 +11,17 @@ export default function RoleBasedNavbar() {
   const { user, isLoaded } = useUser();
   const { userRole, loading } = useAppAuth();
 
-  // Clerk not ready
   if (!isLoaded) return null;
-
-  // Not logged in
   if (!user) return <PublicNavbar />;
+  if (loading || !userRole) return <LoadingNavbar />;
 
-  // Mongo role still loading
-  if (loading || !userRole) {
-    return <LoadingNavbar />;
-  }
-
-  // Role-based navbar
   switch (userRole) {
     case "admin":
       return <AdminNavbar />;
-
     case "verification_officer":
       return <VerificationNavbar />;
-
     case "student":
       return <StudentNavbar />;
-
     default:
       return <StudentNavbar />;
   }

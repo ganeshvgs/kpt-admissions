@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { UserButton } from "@clerk/clerk-react";
+import logo from "/logo.jpg";
 
 export default function AdminNavbar() {
   const { pathname } = useLocation();
@@ -12,12 +13,14 @@ export default function AdminNavbar() {
   return (
     <nav className="sticky top-0 z-50 bg-white shadow">
       <div className="px-6 py-3 flex justify-between items-center">
-        <h1 className="font-bold text-indigo-700">Admin Panel</h1>
+        
+        {/* LOGO */}
+        <Link to="/admin" className="flex items-center gap-2">
+          <img src={logo} alt="Logo" className="h-9 w-auto" />
+        </Link>
 
         <div className="flex gap-6 items-center">
-          <Link to="/admin" className={active("/admin")}>
-            Dashboard
-          </Link>
+          <Link to="/admin" className={active("/admin")}>Dashboard</Link>
           <Link to="/admin/manage-users" className={active("/admin/manage-users")}>
             Manage Users
           </Link>

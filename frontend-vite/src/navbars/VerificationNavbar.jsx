@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { UserButton } from "@clerk/clerk-react";
+import logo from "/logo.jpg";
 
 export default function VerificationNavbar() {
   const { pathname } = useLocation();
@@ -12,42 +13,28 @@ export default function VerificationNavbar() {
   return (
     <nav className="sticky top-0 z-50 bg-white shadow">
       <div className="px-6 py-3 flex justify-between items-center">
-        <h1 className="font-bold text-indigo-700">
-          Verification Officer
-        </h1>
+        
+        <Link to="/verification">
+          <img src={logo} alt="Logo" className="h-9 w-auto" />
+        </Link>
 
         <div className="flex gap-6 items-center">
-          <Link
-            to="/verification"
-            className={active("/verification")}
-          >
+          <Link to="/verification" className={active("/verification")}>
             Verify Applications
           </Link>
-
-          <Link
-            to="/verification/physical"
-            className={active("/verification/physical")}
-          >
+          <Link to="/verification/physical" className={active("/verification/physical")}>
             Physical Verification
           </Link>
-
-          <Link
-            to="/verification/merit"
-            className={active("/verification/merit")}
-          >
+          <Link to="/verification/merit" className={active("/verification/merit")}>
             Generate Merit
           </Link>
-           <Link
+          <Link
             to="/verification/seat-allocation"
             className={active("/verification/seat-allocation")}
           >
-            Seat Aloaction
+            Seat Allocation
           </Link>
-
-          <Link
-            to="/verification/final"
-            className={active("/verification/final")}
-          >
+          <Link to="/verification/final" className={active("/verification/final")}>
             Final Approval
           </Link>
 

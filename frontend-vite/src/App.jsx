@@ -25,6 +25,7 @@ import GenerateMerit from "./pages/verification/GenerateMerit";
 import FinalApproval from "./pages/verification/FinalApproval";
 import MeritList from "./pages/verification/MeritList";
 import SeatAllocation from "./pages/verification/SeatAllocation";
+
 export default function App() {
   return (
     <>
@@ -59,6 +60,7 @@ export default function App() {
             </RequireRole>
           }
         />
+
         <Route
           path="/student/application"
           element={
@@ -67,7 +69,7 @@ export default function App() {
             </RequireRole>
           }
         />
-        
+
         {/* ===== VERIFICATION OFFICER ===== */}
         <Route
           path="/verification"
@@ -77,6 +79,7 @@ export default function App() {
             </RequireRole>
           }
         />
+
         <Route
           path="/verification/physical"
           element={
@@ -85,6 +88,7 @@ export default function App() {
             </RequireRole>
           }
         />
+
         <Route
           path="/verification/merit"
           element={
@@ -93,6 +97,7 @@ export default function App() {
             </RequireRole>
           }
         />
+
         <Route
           path="/verification/final"
           element={
@@ -101,15 +106,24 @@ export default function App() {
             </RequireRole>
           }
         />
-        <Route path="/verification/merit-list" element={<MeritList />} />
-<Route
-  path="/verification/seat-allocation"
-  element={
-   < RequireRole allowedRoles={["verification_officer"]}>
-      <SeatAllocation />
-    </RequireRole>
-  }
-/>
+
+        <Route
+          path="/verification/merit-list"
+          element={
+            <RequireRole allowedRoles={["verification_officer"]}>
+              <MeritList />
+            </RequireRole>
+          }
+        />
+
+        <Route
+          path="/verification/seat-allocation"
+          element={
+            <RequireRole allowedRoles={["verification_officer"]}>
+              <SeatAllocation />
+            </RequireRole>
+          }
+        />
       </Routes>
     </>
   );
