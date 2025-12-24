@@ -1,25 +1,26 @@
 import express from "express";
 import {
-  getAcceptedStudents,
-  verifyPhysicalDocuments,
+  getVerificationList,
+  verifyDocuments,
 } from "../controllers/physicalVerification.controller.js";
 import { requireAuth, requireRole } from "../middlewares/auth.js";
+
 const router = express.Router();
 
-// List students who accepted seat
+// Get Students (accepts ?status=PENDING&search=...)
 router.get(
-  "/accepted",
+  "/list",
   requireAuth,
   requireRole(["verification_officer"]),
-  getAcceptedStudents
+  getVerificationList
 );
 
-// Verify physical documents
+// Verify Action
 router.patch(
   "/verify/:id",
   requireAuth,
   requireRole(["verification_officer"]),
-  verifyPhysicalDocuments
+  verifyDocuments
 );
 
 export default router;

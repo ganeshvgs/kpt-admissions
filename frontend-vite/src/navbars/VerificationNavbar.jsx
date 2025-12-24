@@ -19,6 +19,9 @@ export default function VerificationNavbar() {
         </Link>
 
         <div className="flex gap-6 items-center">
+         <Link to="/verification/dashboard" className={active("/verification/dashboard")}>
+            Dashboard
+          </Link>
           <Link to="/verification" className={active("/verification")}>
             Verify Applications
           </Link>

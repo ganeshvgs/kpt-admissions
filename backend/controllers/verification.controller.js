@@ -1,29 +1,57 @@
 import Application from "../models/application.model.js";
 
-export const getSubmittedApplications = async (req, res) => {
-  const applications = await Application.find({
-    status: "SUBMITTED",
-  });
-  res.json({ applications });
+// ✅ UPDATED: Handles Status Filtering & Search
+export const getApplications = async (req, res) => {
+  try {
+    const { status, search } = req.query;
+
+    // 1. Build Query Object
+    let query = {};
+
+    // Filter by Status (Default to SUBMITTED if not sent, or handle 'ALL')
+    if (status && status !== "ALL") {
+      query.status = status;
+    }
+
+    // Search Logic (Name, SSLC Register No, or Mobile)
+    if (search) {
+      query.$or = [
+        { "personalDetails.name": { $regex: search, $options: "i" } },
+        { "personalDetails.mobile": { $regex: search, $options: "i" } },
+        { "academicDetails.sslcRegisterNumber": { $regex: search, $options: "i" } },
+        { studentClerkId: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    const applications = await Application.find(query).sort({ updatedAt: -1 });
+    res.json({ applications });
+  } catch (error) {
+    console.error("Error fetching applications:", error);
+    res.status(500).json({ message: "Server Error" });
+  }
 };
 
+// ✅ KEEP: This remains the same
 export const verifyApplication = async (req, res) => {
   const { id } = req.params;
   const { status, remarks } = req.body;
 
-  if (!["VERIFIED", "REJECTED", "CORRECTION_REQUIRED"].includes(status)) {
+  if (!["VERIFIED", "REJECTED", "CORRECTION_REQUIRED", "SUBMITTED"].includes(status)) {
     return res.status(400).json({ message: "Invalid status" });
   }
 
   const app = await Application.findById(id);
   if (!app) return res.status(404).json({ message: "Not found" });
 
-  if (app.status !== "SUBMITTED")
-    return res.status(400).json({ message: "Already processed" });
-
+  // Allow re-verification or status change for flexibility
   app.status = status;
   app.remarks = remarks || "";
+  
+  // If verifying, you might want to mark physicalVerification as pending
+  if(status === "VERIFIED") {
+      app.physicalVerification.verified = null; 
+  }
 
   await app.save();
-  res.json({ message: "Updated" });
+  res.json({ message: `Application updated to ${status}` });
 };

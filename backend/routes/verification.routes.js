@@ -1,17 +1,18 @@
 import express from "express";
 import {
-  getSubmittedApplications,
+  getApplications, // 👈 Changed from getSubmittedApplications
   verifyApplication,
 } from "../controllers/verification.controller.js";
 import { requireAuth, requireRole } from "../middlewares/auth.js";
 
 const router = express.Router();
 
+// ✅ UPDATED Route
 router.get(
   "/applications",
   requireAuth,
   requireRole(["verification_officer"]),
-  getSubmittedApplications
+  getApplications
 );
 
 router.patch(

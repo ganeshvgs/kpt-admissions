@@ -1,53 +1,77 @@
 import Application from "../models/application.model.js";
 
-export const getAcceptedStudents = async (req, res) => {
+/* =========================================
+   1. GET LIST
+   ========================================= */
+export const getVerificationList = async (req, res) => {
   try {
-    const applications = await Application.find({
-      status: "PHYSICAL_VERIFICATION_PENDING", // ✅ FIX
-      studentResponse: "ACCEPTED",
-      seatLocked: true,
-    }).sort({ rank: 1 });
+    const { status, search } = req.query;
+    
+    // Default: Show only students who have accepted the seat
+    let query = { seatLocked: true };
 
+    // Status Mapping based on Frontend Tabs
+    if (status === "PENDING") {
+      query.status = "PHYSICAL_VERIFICATION_PENDING";
+    } else if (status === "VERIFIED") {
+      // ✅ Shows students who passed physical verification but are waiting for final approval
+      query.status = "DOCUMENTS_VERIFIED";
+    } else if (status === "FAILED") {
+      query.status = "DOCUMENTS_FAILED";
+    }
+
+    // Search Logic
+    if (search) {
+      query.$or = [
+        { "personalDetails.name": { $regex: search, $options: "i" } },
+        { "personalDetails.mobile": { $regex: search, $options: "i" } },
+        { "personalDetails.aadharNumber": { $regex: search, $options: "i" } },
+      ];
+    }
+
+    const applications = await Application.find(query).sort({ updatedAt: -1 });
     res.json({ applications });
   } catch (err) {
-    console.error("❌ Fetch accepted students failed:", err);
-    res.status(500).json({ message: "Failed to fetch students" });
+    res.status(500).json({ message: "Failed to fetch list" });
   }
 };
 
-export const verifyPhysicalDocuments = async (req, res) => {
+/* =========================================
+   2. VERIFY ACTION (Intermediate Step)
+   ========================================= */
+export const verifyDocuments = async (req, res) => {
   try {
     const { id } = req.params;
     const { verified, remarks } = req.body;
 
-    const application = await Application.findById(id);
-    if (!application) {
-      return res.status(404).json({ message: "Application not found" });
-    }
+    const app = await Application.findById(id);
+    if (!app) return res.status(404).json({ message: "Not found" });
 
-    application.physicalVerification = {
+    // Update the sub-document
+    app.physicalVerification = {
       verified,
       verifiedBy: req.auth.userId,
       verifiedAt: new Date(),
       remarks: remarks || "",
     };
 
+    // Update Status
     if (verified) {
-      application.status = "DOCUMENTS_VERIFIED";
+      // ✅ Moves to intermediate state (Waiting for Final Approval)
+      app.status = "DOCUMENTS_VERIFIED"; 
     } else {
-      application.status = "DOCUMENTS_FAILED";
+      app.status = "DOCUMENTS_FAILED";
     }
 
-    await application.save();
+    await app.save();
 
     res.json({
       success: true,
-      message: verified
-        ? "Documents verified successfully"
-        : "Documents verification failed",
+      message: verified 
+        ? "Documents Verified! Sent for Final Approval." 
+        : "Verification Failed.",
     });
   } catch (err) {
-    console.error("❌ Physical verification failed:", err);
-    res.status(500).json({ message: "Verification failed" });
+    res.status(500).json({ message: "Action failed" });
   }
 };

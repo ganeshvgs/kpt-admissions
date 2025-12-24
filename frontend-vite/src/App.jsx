@@ -25,7 +25,7 @@ import GenerateMerit from "./pages/verification/GenerateMerit";
 import FinalApproval from "./pages/verification/FinalApproval";
 import MeritList from "./pages/verification/MeritList";
 import SeatAllocation from "./pages/verification/SeatAllocation";
-
+import OfficerDashboard from "./pages/verification/OfficerDashboard";
 export default function App() {
   return (
     <>
@@ -121,6 +121,14 @@ export default function App() {
           element={
             <RequireRole allowedRoles={["verification_officer"]}>
               <SeatAllocation />
+            </RequireRole>
+          }
+        />
+         <Route
+          path="/verification/dashboard"
+          element={
+            <RequireRole allowedRoles={["verification_officer"]}>
+              <OfficerDashboard />
             </RequireRole>
           }
         />
