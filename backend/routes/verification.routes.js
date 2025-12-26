@@ -2,6 +2,7 @@ import express from "express";
 import {
   getApplications, // 👈 Changed from getSubmittedApplications
   verifyApplication,
+  getOfficerStats,
 } from "../controllers/verification.controller.js";
 import { requireAuth, requireRole } from "../middlewares/auth.js";
 
@@ -13,6 +14,12 @@ router.get(
   requireAuth,
   requireRole(["verification_officer"]),
   getApplications
+);
+router.get(
+  "/stats",
+  requireAuth,
+  requireRole(["verification_officer"]),
+  getOfficerStats
 );
 
 router.patch(

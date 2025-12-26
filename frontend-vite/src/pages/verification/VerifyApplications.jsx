@@ -1,7 +1,8 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import axios from "axios";
 import { toast } from "react-toastify";
+import { FaSync } from "react-icons/fa"; // Import Icon
 
 // Define Tab Categories
 const TABS = [
@@ -93,23 +94,34 @@ export default function VerifyApplications() {
             <p className="text-gray-500 text-sm">Manage student applications and status</p>
         </div>
         
-        {/* SEARCH BAR */}
-        <div className="w-full md:w-1/3 relative">
-          <input
-            type="text"
-            placeholder="Search by Name, Mobile or SSLC Reg No..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-4 pr-10 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 outline-none"
-          />
-          {searchTerm && (
-             <button 
-               onClick={() => setSearchTerm("")}
-               className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
-             >
-               ✕
-             </button>
-          )}
+        {/* SEARCH BAR & REFRESH BUTTON */}
+        <div className="w-full md:w-auto flex gap-2 items-center">
+          <div className="relative w-full md:w-80">
+            <input
+              type="text"
+              placeholder="Search by Name, Mobile or SSLC Reg No..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-4 pr-10 py-2 border rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 outline-none"
+            />
+            {searchTerm && (
+               <button 
+                 onClick={() => setSearchTerm("")}
+                 className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+               >
+                 ✕
+               </button>
+            )}
+          </div>
+
+          {/* REFRESH BUTTON */}
+          <button 
+            onClick={fetchApplications}
+            className="p-2.5 bg-white border border-gray-300 rounded-lg text-gray-600 hover:text-indigo-600 hover:border-indigo-300 transition shadow-sm"
+            title="Refresh List"
+          >
+            <FaSync className={loading ? "animate-spin" : ""} />
+          </button>
         </div>
       </div>
 
@@ -193,17 +205,17 @@ function ApplicationCard({ app, openId, setOpenId, remarksMap, setRemarksMap, up
         {/* Basic Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-             <h3 className="font-semibold text-gray-900 truncate">{app.personalDetails?.name}</h3>
-             <span className={`px-2 py-0.5 rounded text-xs font-medium ${getStatusBadge(app.status)}`}>
-                 {app.status.replace('_', ' ')}
-             </span>
+              <h3 className="font-semibold text-gray-900 truncate">{app.personalDetails?.name}</h3>
+              <span className={`px-2 py-0.5 rounded text-xs font-medium ${getStatusBadge(app.status)}`}>
+                  {app.status.replace('_', ' ')}
+              </span>
           </div>
           <div className="text-sm text-gray-500 flex flex-wrap gap-x-4 gap-y-1">
-             <span>SSLC: <span className="text-gray-700 font-medium">{app.academicDetails?.sslcPercentage || '-'}%</span></span>
-             <span>•</span>
-             <span>Cat: <span className="text-gray-700 font-medium">{app.categoryDetails?.category}</span></span>
-             <span>•</span>
-             <span>Mobile: {app.personalDetails?.mobile}</span>
+              <span>SSLC: <span className="text-gray-700 font-medium">{app.academicDetails?.sslcPercentage || '-'}%</span></span>
+              <span>•</span>
+              <span>Cat: <span className="text-gray-700 font-medium">{app.categoryDetails?.category}</span></span>
+              <span>•</span>
+              <span>Mobile: {app.personalDetails?.mobile}</span>
           </div>
         </div>
 

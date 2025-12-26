@@ -24,8 +24,8 @@ export default function AdminNavbar() {
           <Link to="/admin/manage-users" className={active("/admin/manage-users")}>
             Manage Users
           </Link>
-          <Link to="/admin/create-user" className={active("/admin/create-user")}>
-            Create User
+          <Link to="/admin/s-manage" className={active("/admin/s-manage")}>
+            Seat Management
           </Link>
 
           <UserButton afterSignOutUrl="/" />

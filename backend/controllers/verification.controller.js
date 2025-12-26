@@ -55,3 +55,43 @@ export const verifyApplication = async (req, res) => {
   await app.save();
   res.json({ message: `Application updated to ${status}` });
 };
+
+export const getOfficerStats = async (req, res) => {
+  try {
+    // Run all counting queries in parallel for speed
+    const [
+      totalApplications,
+      pendingVerification,
+      verified,
+      rejected,
+      correctionRequired,
+      physicallyVerified,
+      finalAdmitted
+    ] = await Promise.all([
+      Application.countDocuments({}), // Total
+      Application.countDocuments({ status: "SUBMITTED" }), // Pending
+      Application.countDocuments({ status: "VERIFIED" }), // Online Verified
+      Application.countDocuments({ status: "REJECTED" }),
+      Application.countDocuments({ status: "CORRECTION_REQUIRED" }),
+      
+      // Assuming 'status' changes or you have a separate flag for Physical Verification
+      Application.countDocuments({ status: "DOCUMENTS_VERIFIED" }), 
+      
+      // If you track final admission in the Application model or a separate one
+      Application.countDocuments({ status: "ADMITTED" }) 
+    ]);
+
+    res.status(200).json({
+      totalApplications,
+      pendingVerification,
+      verified,
+      rejected,
+      correctionRequired,
+      physicallyVerified,
+      finalAdmitted
+    });
+  } catch (error) {
+    console.error("Stats Error:", error);
+    res.status(500).json({ message: "Error fetching statistics" });
+  }
+};

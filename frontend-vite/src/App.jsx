@@ -12,7 +12,7 @@ import RequireRole from "./auth/RequireRole";
 import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ManageUsers from "./pages/admin/manage-users";
-import CreateUser from "./pages/admin/CreateUser";
+import CreateUser from "./pages/admin/SeatManage";
 
 // ================= STUDENT =================
 import StudentDashboard from "./pages/student/StudentDashboard";
@@ -48,7 +48,7 @@ export default function App() {
         >
           <Route index element={<AdminDashboard />} />
           <Route path="manage-users" element={<ManageUsers />} />
-          <Route path="create-user" element={<CreateUser />} />
+          <Route path="s-manage" element={<CreateUser />} />
         </Route>
 
         {/* ===== STUDENT ===== */}
