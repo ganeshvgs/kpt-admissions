@@ -214,3 +214,63 @@ export const downloadAdmissionPDF = async (req, res) => {
     res.status(500).json({ message: "Failed to generate admission PDF." });
   }
 };
+
+export const downloadAcknowledgementPDF = async (req, res) => {
+  try {
+    const userId = req.auth.userId;
+
+    const app = await Application.findOne({
+      studentClerkId: userId,
+    });
+
+    if (!app) return res.status(404).json({ message: "Application not found" });
+
+    const doc = new PDFDocument({ size: "A4", margin: 40 });
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", "attachment; filename=Acknowledgement.pdf");
+
+    doc.pipe(res);
+
+    doc.fontSize(18).text("APPLICATION ACKNOWLEDGEMENT", { align: "center" });
+    doc.moveDown();
+
+    doc.fontSize(11);
+
+    doc.text(`Application ID : ${app._id.toString().slice(-8)}`);
+    doc.text(`Name : ${app.personalDetails?.name || "-"}`);
+    doc.text(`Mobile : ${app.personalDetails?.mobile || "-"}`);
+    doc.text(`Admission Type : ${app.admissionType}`);
+    doc.moveDown();
+
+    doc.font("Helvetica-Bold").text("Selected Branches:");
+    doc.font("Helvetica");
+
+    app.branchPreferences.forEach((b, i) => {
+      doc.text(`${i + 1}. ${b}`);
+    });
+
+    doc.moveDown();
+
+    doc.font("Helvetica-Bold").text("Uploaded Documents:");
+    doc.font("Helvetica");
+
+    const docs = app.documents || {};
+
+    Object.entries(docs).forEach(([key, value]) => {
+      doc.text(`${key} : ${value ? "✔ Uploaded" : "✖ Not Uploaded"}`);
+    });
+
+    doc.moveDown(2);
+
+    doc.fontSize(9).text(
+      "This is system generated acknowledgement. Status / merit / seat allotment not included.",
+      { align: "center" }
+    );
+
+    doc.end();
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ message: "PDF failed" });
+  }
+};

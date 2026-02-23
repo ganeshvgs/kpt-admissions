@@ -1,130 +1,116 @@
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import FullPageLoader from "../components/FullPageLoader";
 export default function Landing() {
+
+  const [status, setStatus] = useState({
+    normal: false,
+    lateral: false,
+    loading: true,
+  });
+
+  useEffect(() => {
+    const loadStatus = async () => {
+      try {
+        const res = await axios.get(`${import.meta.env.VITE_API_URL}/admission/settings`);
+        setStatus({
+          normal: res.data.normalActive,
+          lateral: res.data.lateralActive,
+          loading: false,
+        });
+      } catch {
+        setStatus({ normal: false, lateral: false, loading: false });
+      }
+    };
+    loadStatus();
+  }, []);
+
+  const renderStatus = () => {
+    if (status.loading) {
+  return <FullPageLoader label="Checking admission status..." />;
+}
+
+    if (!status.normal && !status.lateral) {
+      return (
+        <span className="px-4 py-2 rounded-full bg-red-100 text-red-600 text-xs font-bold">
+          ❌ Admissions Closed
+        </span>
+      );
+    }
+
+    return (
+      <div className="flex flex-wrap gap-2 justify-center md:justify-start">
+        {status.normal && (
+          <span className="flex items-center gap-2 px-4 py-2 rounded-full bg-green-100 text-green-700 text-xs font-bold animate-pulse">
+            <span className="w-2 h-2 bg-green-600 rounded-full animate-ping" />
+            NORMAL ADMISSION OPEN
+          </span>
+        )}
+
+        {status.lateral && (
+          <span className="flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 text-blue-700 text-xs font-bold animate-pulse">
+            <span className="w-2 h-2 bg-blue-600 rounded-full animate-ping" />
+            LATERAL ADMISSION OPEN
+          </span>
+        )}
+      </div>
+    );
+  };
+
   return (
-    <div className="min-h-screen w-full overflow-x-hidden bg-gradient-to-br from-slate-50 via-white to-indigo-50 text-gray-800">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50 relative">
 
-      {/* ================= HERO SECTION ================= */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20 grid grid-cols-1 md:grid-cols-2 gap-10 items-center">
+      {/* Dot Background */}
+      <div
+        className="absolute inset-0 opacity-30"
+        style={{
+          backgroundImage: "radial-gradient(circle, #a5b4fc 1px, transparent 1px)",
+          backgroundSize: "40px 40px",
+        }}
+      />
 
-        {/* LEFT CONTENT */}
-        <div className="text-center md:text-left">
-          <p className="text-[11px] sm:text-sm uppercase tracking-widest text-indigo-600 font-semibold">
+      <section className="relative max-w-7xl mx-auto px-6 py-24 grid md:grid-cols-2 gap-12 items-center">
+
+        {/* LEFT */}
+        <div className="space-y-6 text-center md:text-left">
+
+          {/* LIVE STATUS */}
+          {renderStatus()}
+
+          <p className="uppercase tracking-widest text-indigo-600 font-semibold text-sm">
             Autonomous Polytechnic Institution
           </p>
 
-          <h1 className="mt-4 text-2xl sm:text-4xl lg:text-5xl font-bold leading-snug">
-            Karnataka Polytechnic <br className="hidden sm:block" />
-            Mangalore (KPT)
+          <h1 className="text-4xl lg:text-5xl font-bold">
+            Karnataka Polytechnic <br />
+            <span className="text-indigo-600">Mangalore (KPT)</span>
           </h1>
 
-          <p className="mt-4 sm:mt-5 text-sm sm:text-lg text-gray-600 max-w-xl mx-auto md:mx-0">
-            Official online admission portal for Diploma programmes.
-            Apply, verify documents, view merit status, and track
-            admission progress securely.
+          <p className="text-gray-600 max-w-xl mx-auto md:mx-0">
+            Official diploma admission portal. Apply, verify documents,
+            view merit list and track admission progress securely.
           </p>
 
-          <div className="mt-6 flex flex-wrap justify-center md:justify-start gap-2 sm:gap-3 text-xs sm:text-sm">
-            <span className="px-3 py-2 bg-white rounded-full shadow">
-              🎓 Diploma Admissions
-            </span>
-            <span className="px-3 py-2 bg-white rounded-full shadow">
-              📍 Mangalore, Karnataka
-            </span>
-            <span className="px-3 py-2 bg-white rounded-full shadow">
-              🏛 Autonomous Institution
-            </span>
+          <div className="flex gap-3 flex-wrap justify-center md:justify-start text-sm">
+            <span className="px-4 py-2 bg-white rounded-full shadow">🎓 Diploma</span>
+            <span className="px-4 py-2 bg-white rounded-full shadow">📍 Mangalore</span>
+            <span className="px-4 py-2 bg-white rounded-full shadow">🏛 Autonomous</span>
           </div>
 
-          <p className="mt-5 text-[11px] sm:text-xs text-gray-500 italic">
-            * Student, Verification Officer, HOD, and Admin login available.
-          </p>
         </div>
 
-        {/* RIGHT IMAGE */}
-        <div className="flex justify-center md:justify-end">
+        {/* IMAGE */}
+        <div className="relative flex justify-center">
+          <div className="absolute inset-0 bg-indigo-400 blur-[80px] opacity-20 rounded-full"></div>
           <img
             src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSohoo_3dE0QLEFuPAGCQQZXaCbHBiWD__74w&s"
-            alt="KPT Admissions"
-            className="w-full max-w-xs sm:max-w-sm md:max-w-md rounded-2xl shadow-xl object-cover"
+            alt="KPT"
+            className="relative z-10 max-w-md rounded-2xl shadow-xl border"
           />
         </div>
+
       </section>
 
-      {/* ================= ADMISSION PROCESS ================= */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-14 sm:py-20">
-        <h2 className="text-xl sm:text-3xl font-semibold text-center">
-          Admission Process
-        </h2>
-
-        <p className="mt-3 sm:mt-4 text-center text-gray-600 max-w-2xl mx-auto text-sm sm:text-base">
-          A transparent and structured admission workflow designed
-          for Diploma applicants under the autonomous system.
-        </p>
-
-        <div className="mt-8 sm:mt-12 grid gap-4 sm:gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {[
-            {
-              title: "Online Application",
-              icon: "📝",
-              desc: "Students apply by entering SSLC / PUC details and selecting preferred branches.",
-            },
-            {
-              title: "Reservation Selection",
-              icon: "🏷️",
-              desc: "Choose applicable reservations like Category, Rural, Kannada Medium, HK Region.",
-            },
-            {
-              title: "Document Verification",
-              icon: "📂",
-              desc: "Physical document verification at the institute on the scheduled date.",
-            },
-            {
-              title: "Merit List Generation",
-              icon: "📊",
-              desc: "Merit list prepared based on eligibility and academic performance.",
-            },
-            {
-              title: "Seat Allotment",
-              icon: "🎯",
-              desc: "Seats allotted department-wise and forwarded to respective HODs.",
-            },
-            {
-              title: "Department Allocation",
-              icon: "🏫",
-              desc: "Final admitted students are mapped to departments and HOD dashboards.",
-            },
-          ].map((item) => (
-            <div
-              key={item.title}
-              className="bg-white p-5 sm:p-6 rounded-xl shadow border hover:shadow-lg transition text-center sm:text-left"
-            >
-              <div className="text-3xl">{item.icon}</div>
-              <h3 className="mt-3 text-base sm:text-lg font-semibold text-indigo-700">
-                {item.title}
-              </h3>
-              <p className="mt-2 text-sm text-gray-600 leading-relaxed">
-                {item.desc}
-              </p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ================= FOOTER ================= */}
-      <footer className="bg-slate-900 text-slate-300 py-8 sm:py-10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 text-center">
-          <p className="font-medium text-white text-sm sm:text-base">
-            Karnataka Polytechnic, Mangalore
-          </p>
-
-          <p className="mt-2 text-xs sm:text-sm">
-            Autonomous Diploma Institution · Karnataka
-          </p>
-
-          <p className="mt-4 text-[11px] sm:text-xs text-slate-400">
-            © {new Date().getFullYear()} KPT Admissions Portal · All Rights Reserved
-          </p>
-        </div>
-      </footer>
     </div>
   );
 }

@@ -12,4 +12,5 @@ router.post("/", requireAuth, requireRole(["student"]), createApplication);
 router.get("/my", requireAuth, requireRole(["student"]), getMyApplication);
 router.put("/", requireAuth, requireRole(["student"]), updateMyApplication);
 
+
 export default router;

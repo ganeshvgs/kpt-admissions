@@ -27,6 +27,8 @@ export default function AdminNavbar() {
           <Link to="/admin/s-manage" className={active("/admin/s-manage")}>
             Seat Management
           </Link>
+          <Link to="/admin/admission-control">Admission Control</Link>
+
 
           <UserButton afterSignOutUrl="/" />
         </div>

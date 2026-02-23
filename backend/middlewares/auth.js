@@ -2,13 +2,6 @@
 import { getAuth } from "@clerk/express";
 import User from "../models/User.js";
 
-/**
- * ===============================
- * REQUIRE AUTH (LOGIN REQUIRED)
- * ===============================
- * ✔ Verifies Clerk session
- * ✔ Attaches clerkUserId to request
- */
 export const requireAuth = (req, res, next) => {
   try {
     const auth = getAuth(req);
@@ -25,16 +18,7 @@ export const requireAuth = (req, res, next) => {
   }
 };
 
-/**
- * ===============================
- * REQUIRE ROLE (ROLE BASED ACCESS)
- * ===============================
- * ✔ Reads role from MongoDB (SOURCE OF TRUTH)
- * ✔ Blocks unauthorized roles
- *
- * Usage:
- * router.get("/admin", requireAuth, requireRole(["admin"]), handler)
- */
+
 export const requireRole = (allowedRoles = []) => {
   return async (req, res, next) => {
     const user = await User.findOne({ clerkUserId: req.clerkUserId });

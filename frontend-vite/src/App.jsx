@@ -5,6 +5,7 @@ import DashboardRedirect from "./components/DashboardRedirect";
 
 import Landing from "./pages/Landing";
 import Unauthorized from "./pages/Unauthorized";
+import SignInPage from "./pages/SignInPage";
 
 import RequireRole from "./auth/RequireRole";
 
@@ -13,10 +14,11 @@ import AdminLayout from "./pages/admin/AdminLayout";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import ManageUsers from "./pages/admin/manage-users";
 import CreateUser from "./pages/admin/SeatManage";
+import AdminAdmissionControl from "./pages/admin/AdminAdmissionControl";
 
 // ================= STUDENT =================
 import StudentDashboard from "./pages/student/StudentDashboard";
-import ApplicationForm from "./pages/student/ApplicationForm";
+import AdmissionForm from "./pages/student/AdmissionForm";
 
 // ================= VERIFICATION =================
 import VerifyApplications from "./pages/verification/VerifyApplications";
@@ -26,9 +28,14 @@ import FinalApproval from "./pages/verification/FinalApproval";
 import MeritList from "./pages/verification/MeritList";
 import SeatAllocation from "./pages/verification/SeatAllocation";
 import OfficerDashboard from "./pages/verification/OfficerDashboard";
+
+// GLOBAL SHELL
+import AppShell from "./layout/AppShell";
+
 export default function App() {
   return (
-    <>
+    <AppShell>
+
       <RoleBasedNavbar />
 
       <Routes>
@@ -36,7 +43,7 @@ export default function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/redirect" element={<DashboardRedirect />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
-
+<Route path="/sign-in" element={<SignInPage />} />
         {/* ===== ADMIN ===== */}
         <Route
           path="/admin"
@@ -49,6 +56,7 @@ export default function App() {
           <Route index element={<AdminDashboard />} />
           <Route path="manage-users" element={<ManageUsers />} />
           <Route path="s-manage" element={<CreateUser />} />
+          <Route path="admission-control" element={<AdminAdmissionControl />} />
         </Route>
 
         {/* ===== STUDENT ===== */}
@@ -65,7 +73,7 @@ export default function App() {
           path="/student/application"
           element={
             <RequireRole allowedRoles={["student"]}>
-              <ApplicationForm />
+              <AdmissionForm />
             </RequireRole>
           }
         />
@@ -124,7 +132,8 @@ export default function App() {
             </RequireRole>
           }
         />
-         <Route
+
+        <Route
           path="/verification/dashboard"
           element={
             <RequireRole allowedRoles={["verification_officer"]}>
@@ -133,6 +142,7 @@ export default function App() {
           }
         />
       </Routes>
-    </>
+
+    </AppShell>
   );
 }

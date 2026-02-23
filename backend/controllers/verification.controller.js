@@ -1,19 +1,35 @@
 import Application from "../models/application.model.js";
+import AdmissionSettings from "../models/AdmissionSettings.js";
 
 // ✅ UPDATED: Handles Status Filtering & Search
 export const getApplications = async (req, res) => {
   try {
     const { status, search } = req.query;
 
-    // 1. Build Query Object
-    let query = {};
+    // ⭐ GET ACTIVE ADMISSION TYPE
+    const settings = await AdmissionSettings.findOne();
 
-    // Filter by Status (Default to SUBMITTED if not sent, or handle 'ALL')
+    let admissionType = null;
+
+    if (settings?.normalActive) admissionType = "NORMAL";
+    if (settings?.lateralActive) admissionType = "LATERAL";
+
+    // If nothing active, return empty
+    if (!admissionType) {
+      return res.json({ applications: [] });
+    }
+
+    // BASE QUERY
+    let query = {
+      admissionType // 🔥 THIS IS THE MAGIC
+    };
+
+    // Status filter
     if (status && status !== "ALL") {
       query.status = status;
     }
 
-    // Search Logic (Name, SSLC Register No, or Mobile)
+    // Search
     if (search) {
       query.$or = [
         { "personalDetails.name": { $regex: search, $options: "i" } },
@@ -23,8 +39,12 @@ export const getApplications = async (req, res) => {
       ];
     }
 
-    const applications = await Application.find(query).sort({ updatedAt: -1 });
+    const applications = await Application
+      .find(query)
+      .sort({ updatedAt: -1 });
+
     res.json({ applications });
+
   } catch (error) {
     console.error("Error fetching applications:", error);
     res.status(500).json({ message: "Server Error" });
@@ -58,7 +78,19 @@ export const verifyApplication = async (req, res) => {
 
 export const getOfficerStats = async (req, res) => {
   try {
-    // Run all counting queries in parallel for speed
+    const settings = await AdmissionSettings.findOne();
+
+    let admissionType = null;
+
+    if (settings?.normalActive) admissionType = "NORMAL";
+    if (settings?.lateralActive) admissionType = "LATERAL";
+
+    if (!admissionType) {
+      return res.json({});
+    }
+
+    const base = { admissionType };
+
     const [
       totalApplications,
       pendingVerification,
@@ -68,20 +100,16 @@ export const getOfficerStats = async (req, res) => {
       physicallyVerified,
       finalAdmitted
     ] = await Promise.all([
-      Application.countDocuments({}), // Total
-      Application.countDocuments({ status: "SUBMITTED" }), // Pending
-      Application.countDocuments({ status: "VERIFIED" }), // Online Verified
-      Application.countDocuments({ status: "REJECTED" }),
-      Application.countDocuments({ status: "CORRECTION_REQUIRED" }),
-      
-      // Assuming 'status' changes or you have a separate flag for Physical Verification
-      Application.countDocuments({ status: "DOCUMENTS_VERIFIED" }), 
-      
-      // If you track final admission in the Application model or a separate one
-      Application.countDocuments({ status: "ADMITTED" }) 
+      Application.countDocuments(base),
+      Application.countDocuments({ ...base, status: "SUBMITTED" }),
+      Application.countDocuments({ ...base, status: "VERIFIED" }),
+      Application.countDocuments({ ...base, status: "REJECTED" }),
+      Application.countDocuments({ ...base, status: "CORRECTION_REQUIRED" }),
+      Application.countDocuments({ ...base, status: "DOCUMENTS_VERIFIED" }),
+      Application.countDocuments({ ...base, status: "ADMITTED" })
     ]);
 
-    res.status(200).json({
+    res.json({
       totalApplications,
       pendingVerification,
       verified,
@@ -90,6 +118,7 @@ export const getOfficerStats = async (req, res) => {
       physicallyVerified,
       finalAdmitted
     });
+
   } catch (error) {
     console.error("Stats Error:", error);
     res.status(500).json({ message: "Error fetching statistics" });

@@ -1,6 +1,6 @@
 import { useUser } from "@clerk/clerk-react";
 import { useAppAuth } from "../context/AuthContext";
-
+import LanguageSwitcher from "../LanguageSwitcher";
 import PublicNavbar from "./PublicNavbar";
 import StudentNavbar from "./StudentNavbar";
 import AdminNavbar from "./AdminNavbar";
@@ -10,6 +10,10 @@ import LoadingNavbar from "./LoadingNavbar";
 export default function RoleBasedNavbar() {
   const { user, isLoaded } = useUser();
   const { userRole, loading } = useAppAuth();
+  <div className="flex items-center gap-4">
+  <LanguageSwitcher />
+</div>
+
 
   // ✅ 1. Clerk not loaded yet → show skeleton (NO BLANK)
   if (!isLoaded) {

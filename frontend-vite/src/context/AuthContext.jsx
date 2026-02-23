@@ -1,3 +1,4 @@
+//frontend-vite/src/context/AuthContext.jsx
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import axios from "axios";

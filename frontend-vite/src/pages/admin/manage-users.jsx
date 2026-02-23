@@ -1,24 +1,25 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/clerk-react";
 import { toast } from "react-toastify";
+import { motion } from "framer-motion";
+import { Users, UserPlus, Trash2 } from "lucide-react";
 
-// STRICT ROLES: Only Admin & Verification Officer
+// STRICT ROLES
 const ROLES = ["admin", "verification_officer"];
 
 export default function UserManagement() {
   const { getToken } = useAuth();
-  
+
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [search, setSearch] = useState(""); // Search state
-  
+  const [search, setSearch] = useState("");
+
   const [createForm, setCreateForm] = useState({
     email: "",
     role: "verification_officer",
   });
-  const [creating, setCreating] = useState(false);
 
-  // --- ACTIONS ---
+  const [creating, setCreating] = useState(false);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -28,12 +29,8 @@ export default function UserManagement() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!res.ok) throw new Error();
       const data = await res.json();
-      
-      // Double check safety: Filter out students on frontend too
-      const staffOnly = data.filter(u => u.role !== 'student');
-      setUsers(staffOnly);
+      setUsers(data.filter(u => u.role !== "student"));
     } catch {
       toast.error("Failed to fetch users");
     } finally {
@@ -41,9 +38,14 @@ export default function UserManagement() {
     }
   };
 
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
   const handleCreate = async (e) => {
     e.preventDefault();
     setCreating(true);
+
     try {
       const token = await getToken();
       const res = await fetch(`${import.meta.env.VITE_API_URL}/admin/users`, {
@@ -55,14 +57,13 @@ export default function UserManagement() {
         body: JSON.stringify(createForm),
       });
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to create");
+      if (!res.ok) throw new Error();
 
       toast.success("Staff user created");
       setCreateForm({ email: "", role: "verification_officer" });
-      fetchUsers(); 
-    } catch (err) {
-      toast.error(err.message);
+      fetchUsers();
+    } catch {
+      toast.error("Failed to create user");
     } finally {
       setCreating(false);
     }
@@ -71,7 +72,7 @@ export default function UserManagement() {
   const updateRole = async (id, role) => {
     try {
       const token = await getToken();
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/admin/users/${id}/role`, {
+      await fetch(`${import.meta.env.VITE_API_URL}/admin/users/${id}/role`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -80,7 +81,6 @@ export default function UserManagement() {
         body: JSON.stringify({ role }),
       });
 
-      if (!res.ok) throw new Error();
       toast.success("Role updated");
       fetchUsers();
     } catch {
@@ -89,161 +89,162 @@ export default function UserManagement() {
   };
 
   const deleteUser = async (id) => {
-    if (!confirm("Are you sure you want to delete this staff member?")) return;
+    if (!confirm("Delete this staff member?")) return;
 
     try {
       const token = await getToken();
-      const res = await fetch(`${import.meta.env.VITE_API_URL}/admin/users/${id}`, {
+      await fetch(`${import.meta.env.VITE_API_URL}/admin/users/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      if (!res.ok) throw new Error();
       toast.success("User deleted");
       fetchUsers();
     } catch {
-      toast.error("Failed to delete user");
+      toast.error("Delete failed");
     }
   };
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
-  // Filter Logic: Search by email
-  const filteredUsers = users.filter(u => 
+  const filteredUsers = users.filter(u =>
     u.email.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-8">
-      
-      {/* --- CREATE USER FORM --- */}
-      <div className="bg-white p-6 rounded-lg shadow-md border border-gray-100">
-        <h2 className="text-xl font-bold mb-4 text-gray-800">Create New Staff</h2>
-        <form onSubmit={handleCreate} className="flex flex-col md:flex-row gap-4 items-end">
-          <div className="flex-1 w-full">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
-            <input
-              type="email"
-              required
-              placeholder="staff@college.edu"
-              value={createForm.email}
-              onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
-              className="w-full border border-gray-300 px-3 py-2 rounded focus:ring-2 focus:ring-indigo-500 outline-none"
-            />
-          </div>
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5 }}
+      className="max-w-6xl mx-auto px-6 py-10 space-y-10"
+    >
 
-          <div className="w-full md:w-64">
-            <label className="block text-sm font-medium text-gray-700 mb-1">Assign Role</label>
-            <select
-              value={createForm.role}
-              onChange={(e) => setCreateForm({ ...createForm, role: e.target.value })}
-              className="w-full border border-gray-300 px-3 py-2 rounded focus:ring-2 focus:ring-indigo-500 outline-none"
-            >
-              {ROLES.map((r) => (
-                <option key={r} value={r}>{r}</option>
-              ))}
-            </select>
-          </div>
+      {/* HEADER */}
+      <div className="flex items-center gap-3 text-indigo-700 text-3xl font-bold">
+        <Users />
+        Staff Management
+      </div>
 
-          <button
-            type="submit"
+      {/* CREATE CARD */}
+      <motion.div
+        initial={{ opacity: 0, scale: .95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-white/80 backdrop-blur rounded-2xl shadow-xl p-6 border"
+      >
+        <h2 className="flex items-center gap-2 font-semibold text-lg mb-5">
+          <UserPlus /> Create Staff
+        </h2>
+
+        <form onSubmit={handleCreate} className="grid md:grid-cols-3 gap-4">
+          <input
+            type="email"
+            required
+            placeholder="staff@college.edu"
+            value={createForm.email}
+            onChange={(e) => setCreateForm({ ...createForm, email: e.target.value })}
+            className="border rounded-xl px-4 py-2 focus:ring-2 focus:ring-indigo-500"
+          />
+
+          <select
+            value={createForm.role}
+            onChange={(e) => setCreateForm({ ...createForm, role: e.target.value })}
+            className="border rounded-xl px-4 py-2"
+          >
+            {ROLES.map(r => (
+              <option key={r}>{r}</option>
+            ))}
+          </select>
+
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: .95 }}
             disabled={creating}
-            className="w-full md:w-auto bg-indigo-600 text-white px-6 py-2 rounded font-medium hover:bg-indigo-700 disabled:opacity-50 transition-colors"
+            className="bg-indigo-600 text-white rounded-xl py-2 shadow"
           >
             {creating ? "Creating..." : "Add User"}
-          </button>
+          </motion.button>
         </form>
-      </div>
+      </motion.div>
 
-      {/* --- USER LIST --- */}
-      <div>
-        <div className="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
-            <h1 className="text-2xl font-bold text-gray-800">Manage Staff</h1>
-            
-            {/* Search Input */}
-            <input 
-                type="text" 
-                placeholder="Search staff email..." 
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full md:w-64 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 outline-none"
-            />
+      {/* USER LIST */}
+      <motion.div className="bg-white/80 backdrop-blur rounded-2xl shadow-xl border overflow-hidden">
+
+        <div className="flex justify-between items-center p-5 border-b">
+          <h3 className="font-semibold">Staff List</h3>
+
+          <input
+            placeholder="Search email..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="border rounded-xl px-4 py-2 focus:ring-2 focus:ring-indigo-500"
+          />
         </div>
-        
+
         {loading ? (
-          <div className="text-center py-10 text-gray-500">Loading staff...</div>
+          <div className="p-10 text-center animate-pulse">Loading...</div>
         ) : (
-          <div className="overflow-x-auto rounded-lg shadow border border-gray-200 bg-white">
-            <table className="w-full text-sm text-left">
-              <thead className="bg-gray-50 text-gray-700 uppercase font-medium">
-                <tr>
-                  <th className="p-4 border-b">Email</th>
-                  <th className="p-4 border-b">Current Role</th>
-                  <th className="p-4 border-b">Update Role</th>
-                  <th className="p-4 border-b text-center">Actions</th>
-                </tr>
-              </thead>
+          <table className="w-full text-sm">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="p-4 text-left">Email</th>
+                <th>Role</th>
+                <th>Update</th>
+                <th></th>
+              </tr>
+            </thead>
 
-              <tbody>
-                {filteredUsers.length === 0 ? (
-                  <tr>
-                    <td colSpan="4" className="p-4 text-center text-gray-500">
-                        {search ? "No matches found." : "No staff found."}
+            <tbody>
+              {filteredUsers.map((u, i) => {
+                const isAdmin = u.role === "admin";
+
+                return (
+                  <motion.tr
+                    key={u.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: i * .05 }}
+                    className="border-b hover:bg-indigo-50"
+                  >
+                    <td className="p-4 font-medium">{u.email}</td>
+
+                    <td>
+                      <span className={`px-3 py-1 rounded-full text-xs font-bold
+                        ${isAdmin ? "bg-red-100 text-red-700" : "bg-indigo-100 text-indigo-700"}`}>
+                        {u.role}
+                      </span>
                     </td>
-                  </tr>
-                ) : (
-                  filteredUsers.map((u) => {
-                    const isAdmin = u.role === "admin";
-                    
-                    return (
-                      <tr key={u.id} className="border-b last:border-0 hover:bg-gray-50 transition-colors">
-                        <td className="p-4 font-medium text-gray-900">{u.email}</td>
 
-                        <td className="p-4">
-                          <span className={`px-2 py-1 rounded-full text-xs font-semibold
-                            ${isAdmin ? "bg-red-100 text-red-700" : "bg-blue-100 text-blue-700"}`}>
-                            {u.role}
-                          </span>
-                        </td>
+                    <td>
+                      {!isAdmin && (
+                        <select
+                          value={u.role}
+                          onChange={(e) => updateRole(u.id, e.target.value)}
+                          className="border rounded px-2 py-1"
+                        >
+                          {ROLES.map(r => (
+                            <option key={r}>{r}</option>
+                          ))}
+                        </select>
+                      )}
+                    </td>
 
-                        <td className="p-4">
-                          {isAdmin ? (
-                            <span className="text-xs text-gray-400 italic">Protected</span>
-                          ) : (
-                            <select
-                              value={u.role}
-                              onChange={(e) => updateRole(u.id, e.target.value)}
-                              className="border border-gray-300 rounded px-2 py-1 bg-white focus:ring-2 focus:ring-indigo-500 outline-none cursor-pointer"
-                            >
-                              {ROLES.map((r) => (
-                                <option key={r} value={r}>{r}</option>
-                              ))}
-                            </select>
-                          )}
-                        </td>
-
-                        <td className="p-4 text-center">
-                          {!isAdmin && (
-                            <button
-                              onClick={() => deleteUser(u.id)}
-                              className="text-red-500 hover:text-red-700 hover:bg-red-50 px-3 py-1 rounded transition-colors"
-                              title="Delete User"
-                            >
-                              Delete
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })
-                )}
-              </tbody>
-            </table>
-          </div>
+                    <td className="text-center">
+                      {!isAdmin && (
+                        <motion.button
+                          whileHover={{ scale: 1.1 }}
+                          onClick={() => deleteUser(u.id)}
+                          className="text-red-500"
+                        >
+                          <Trash2 size={16} />
+                        </motion.button>
+                      )}
+                    </td>
+                  </motion.tr>
+                );
+              })}
+            </tbody>
+          </table>
         )}
-      </div>
-    </div>
+      </motion.div>
+
+    </motion.div>
   );
 }
