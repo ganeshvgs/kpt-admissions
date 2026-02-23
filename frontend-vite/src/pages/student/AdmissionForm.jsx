@@ -19,7 +19,38 @@ const BRANCHES = [
 ];
 
 const RELIGIONS = ["Hindu", "Muslim", "Christian", "Sikh", "Jain", "Buddhist", "Parsi", "Other"];
+// Mother Tongues
+const MOTHER_TONGUES = [
+  "Kannada",
+  "Tulu",
+  "Arebase",
+  "English",
+  "Hindi",
+  "Malayalam",
+  "Tamil",
+  "Telugu"
+];
 
+// States (7 nearby including Karnataka)
+const STATES = [
+  "Karnataka",
+  "Kerala",
+  "Tamil Nadu",
+  "Andhra Pradesh",
+  "Telangana",
+  "Goa",
+  "Maharashtra"
+];
+
+// Karnataka Districts
+const KARNATAKA_DISTRICTS = [
+  "Bagalkot","Ballari","Belagavi","Bengaluru Rural","Bengaluru Urban",
+  "Bidar","Chamarajanagar","Chikkaballapur","Chikkamagaluru","Chitradurga",
+  "Dakshina Kannada","Davanagere","Dharwad","Gadag","Hassan",
+  "Haveri","Kalaburagi","Kodagu","Kolar","Koppal",
+  "Mandya","Mysuru","Raichur","Ramanagara","Shivamogga",
+  "Tumakuru","Udupi","Uttara Kannada","Vijayapura","Yadgir"
+];
 const EMPTY_FORM = {
   admissionType: "", 
   personalDetails: {
@@ -586,9 +617,54 @@ export default function AdmissionForm() {
               <SelectGroup id="gender" name="gender" label="Gender" value={form.personalDetails.gender} onChange={(e) => update("personalDetails", "gender", e.target.value)} options={["Male", "Female", "Transgender"]} required disabled={!editable} />
               <SelectGroup id="religion" name="religion" label="Religion" value={form.personalDetails.religion} onChange={(e) => update("personalDetails", "religion", e.target.value)} options={RELIGIONS} required disabled={!editable} />
               <InputGroup id="nationality" name="nationality" label="Nationality" value={form.personalDetails.nationality} onChange={(e) => update("personalDetails", "nationality", e.target.value)} required={false} disabled={!editable} />
-              <InputGroup id="motherTongue" name="motherTongue" label="Mother Tongue" value={form.personalDetails.motherTongue} onChange={(e) => update("personalDetails", "motherTongue", e.target.value)} required={false} disabled={!editable} />
-              <InputGroup id="nativeState" name="nativeState" label="Native State" value={form.personalDetails.nativeState} onChange={(e) => update("personalDetails", "nativeState", e.target.value)} required={false} disabled={!editable} />
-              <InputGroup id="nativeDistrict" name="nativeDistrict" label="Native District" value={form.personalDetails.nativeDistrict} onChange={(e) => update("personalDetails", "nativeDistrict", e.target.value)} required={false} disabled={!editable} className="md:col-span-2" />
+              <SelectGroup
+  id="motherTongue"
+  name="motherTongue"
+  label="Mother Tongue"
+  value={form.personalDetails.motherTongue}
+  onChange={(e) => update("personalDetails", "motherTongue", e.target.value)}
+  options={MOTHER_TONGUES}
+  required={false}
+  disabled={!editable}
+/>
+             {/* Native State */}
+<SelectGroup
+  id="nativeState"
+  name="nativeState"
+  label="Native State"
+  value={form.personalDetails.nativeState}
+  onChange={(e) => {
+    update("personalDetails", "nativeState", e.target.value);
+    update("personalDetails", "nativeDistrict", ""); // Reset district
+  }}
+  options={STATES}
+  required={false}
+  disabled={!editable}
+/>
+
+{/* Native District */}
+{form.personalDetails.nativeState === "Karnataka" ? (
+  <SelectGroup
+    id="nativeDistrict"
+    name="nativeDistrict"
+    label="Native District"
+    value={form.personalDetails.nativeDistrict}
+    onChange={(e) => update("personalDetails", "nativeDistrict", e.target.value)}
+    options={KARNATAKA_DISTRICTS}
+    required={false}
+    disabled={!editable}
+  />
+) : (
+  <InputGroup
+    id="nativeDistrict"
+    name="nativeDistrict"
+    label="Native District"
+    value={form.personalDetails.nativeDistrict}
+    onChange={(e) => update("personalDetails", "nativeDistrict", e.target.value)}
+    required={false}
+    disabled={!editable}
+  />
+)}
             </div>
           </div>
 
@@ -597,9 +673,44 @@ export default function AdmissionForm() {
           <div className="bg-slate-50 p-6 rounded-lg border border-slate-200 mb-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                <InputGroup id="address" name="address" label="Address Line" value={form.personalDetails.address} onChange={(e) => update("personalDetails", "address", e.target.value)} disabled={!editable} required className="md:col-span-3" placeholder="House No, Street, Landmark"/>
-               <InputGroup id="state" name="state" label="State" value={form.personalDetails.state} onChange={(e) => update("personalDetails", "state", e.target.value)} required disabled={!editable} />
-               <InputGroup id="district" name="district" label="District" value={form.personalDetails.district} onChange={(e) => update("personalDetails", "district", e.target.value)} required disabled={!editable} />
-               <InputGroup 
+{/* Address State */}
+<SelectGroup
+  id="state"
+  name="state"
+  label="State"
+  value={form.personalDetails.state}
+  onChange={(e) => {
+    update("personalDetails", "state", e.target.value);
+    update("personalDetails", "district", ""); // reset district
+  }}
+  options={STATES}
+  required
+  disabled={!editable}
+/>
+
+{/* Address District */}
+{form.personalDetails.state === "Karnataka" ? (
+  <SelectGroup
+    id="district"
+    name="district"
+    label="District"
+    value={form.personalDetails.district}
+    onChange={(e) => update("personalDetails", "district", e.target.value)}
+    options={KARNATAKA_DISTRICTS}
+    required
+    disabled={!editable}
+  />
+) : (
+  <InputGroup
+    id="district"
+    name="district"
+    label="District"
+    value={form.personalDetails.district}
+    onChange={(e) => update("personalDetails", "district", e.target.value)}
+    required
+    disabled={!editable}
+  />
+)}<InputGroup 
                  id="pincode" name="pincode" label="Pincode" value={form.personalDetails.pincode} 
                  onChange={(e) => update("personalDetails", "pincode", e.target.value.replace(/\D/g, ''))} 
                  required disabled={!editable} maxLength={6}
