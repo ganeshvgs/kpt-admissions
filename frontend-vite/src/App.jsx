@@ -5,7 +5,7 @@ import DashboardRedirect from "./components/DashboardRedirect";
 
 import Landing from "./pages/Landing";
 import Unauthorized from "./pages/Unauthorized";
-import SignInPage from "./pages/SignInPage";
+
 
 import RequireRole from "./auth/RequireRole";
 
@@ -43,7 +43,7 @@ export default function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/redirect" element={<DashboardRedirect />} />
         <Route path="/unauthorized" element={<Unauthorized />} />
-<Route path="/sign-in" element={<SignInPage />} />
+
         {/* ===== ADMIN ===== */}
         <Route
           path="/admin"

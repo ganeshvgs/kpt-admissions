@@ -615,7 +615,7 @@ export default function AdmissionForm() {
             </div>
           </div>
 
-          {/* ACADEMIC DETAILS */}
+          
           <SectionHeader icon={BookOpen} title="Academic Information" />
           
           {form.admissionType === "LATERAL" && (

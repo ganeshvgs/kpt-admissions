@@ -17,11 +17,11 @@ export default function PublicNavbar() {
         {/* Desktop */}
         <SignedOut>
           <div className="hidden sm:block">
-            <Link to="/sign-in">
-  <button className="bg-indigo-600 text-white px-4 py-2 rounded text-sm">
-    Sign In
-  </button>
-</Link>
+            <SignInButton redirectUrl="/redirect">
+              <button className="bg-indigo-600 text-white px-4 py-2 rounded text-sm">
+                Sign In
+              </button>
+            </SignInButton>
           </div>
         </SignedOut>
 
