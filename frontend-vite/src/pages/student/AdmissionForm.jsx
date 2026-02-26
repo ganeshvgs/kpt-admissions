@@ -495,29 +495,30 @@ export default function AdmissionForm() {
     return true;
   };
 
-  const submit = async () => {
-    if (!validateForm()) return;
-    
-    setSubmitting(true);
-    
-    try {
-      const token = await getToken();
-      await axios.put(
-        `${import.meta.env.VITE_API_URL}/applications`,
-        form,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      
-      toast.success("Application Submitted Successfully!");
-      setStatus("SUBMITTED");
-      setEditable(false);
-    } catch (e) {
-      toast.error("Failed to submit application. Please try again.");
-    } finally {
-      setSubmitting(false);
-    }
-  };
+const submit = async () => {
+  if (!validateForm()) return;
 
+  setSubmitting(true);
+
+  try {
+    const token = await getToken();
+
+    await axios.post(
+      `${import.meta.env.VITE_API_URL}/applications`,
+      form,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    toast.success("Application Submitted Successfully!");
+    setStatus("SUBMITTED");
+    setEditable(false);
+
+  } catch (e) {
+    toast.error("Failed to submit application.");
+  } finally {
+    setSubmitting(false);
+  }
+};
   if (loading) return <FullPageLoader label="Loading admission form..." />;
 
   if (admissionsClosed) {
