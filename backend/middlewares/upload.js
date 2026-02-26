@@ -8,25 +8,27 @@
   const upload = multer({ storage });
 
   // Convert buffer → stream and upload to Cloudinary
-  export const uploadToCloudinary = (req, res, next) => {
-    if (!req.file) return next();
+export const uploadToCloudinary = (req, res, next) => {
+  if (!req.file) return next();
 
-    const stream = cloudinary.uploader.upload_stream(
-      { folder: "kpt society users" },
-      (err, result) => {
-        if (err) return next(err);
+  const stream = cloudinary.uploader.upload_stream(
+    { 
+      folder: "kpt admissions",
+      resource_type: "auto"   // 🔥 FIX HERE
+    },
+    (err, result) => {
+      if (err) return next(err);
 
-        req.file.cloudinaryUrl = result.secure_url; // store URL
-        next();
-      }
-    );
+      req.file.cloudinaryUrl = result.secure_url;
+      next();
+    }
+  );
 
-    const bufferStream = new Readable();
-    bufferStream.push(req.file.buffer);
-    bufferStream.push(null);
-    bufferStream.pipe(stream);
-  };
-
+  const bufferStream = new Readable();
+  bufferStream.push(req.file.buffer);
+  bufferStream.push(null);
+  bufferStream.pipe(stream);
+};
   // Middleware for single file
 export const uploadSingleImage = [upload.single("image"), uploadToCloudinary];
 
