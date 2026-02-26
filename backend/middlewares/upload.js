@@ -11,18 +11,20 @@
 export const uploadToCloudinary = (req, res, next) => {
   if (!req.file) return next();
 
-  const stream = cloudinary.uploader.upload_stream(
-    { 
-      folder: "kpt admissions",
-      resource_type: "auto"   // 🔥 FIX HERE
-    },
-    (err, result) => {
-      if (err) return next(err);
+ const stream = cloudinary.uploader.upload_stream(
+  { 
+    folder: "kpt-society-users",
+    resource_type: "auto",
+    type: "upload",
+    access_mode: "public"
+  },
+  (err, result) => {
+    if (err) return next(err);
 
-      req.file.cloudinaryUrl = result.secure_url;
-      next();
-    }
-  );
+    req.file.cloudinaryUrl = result.secure_url;
+    next();
+  }
+);
 
   const bufferStream = new Readable();
   bufferStream.push(req.file.buffer);
