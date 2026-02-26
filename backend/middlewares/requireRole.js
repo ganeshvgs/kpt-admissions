@@ -1,3 +1,4 @@
+//backend\middlewares\requireRole.js
 import User from "../models/User.js";
 
 export const requireRole = (roles = []) => {

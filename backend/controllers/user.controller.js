@@ -1,3 +1,4 @@
+//backend\controllers\user.controller.js
 import { clerkClient } from "@clerk/express";
 import User from "../models/User.js";
 
